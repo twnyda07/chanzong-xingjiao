@@ -39,10 +39,21 @@
   .m.todo{opacity:.5; cursor:default;}
 
   .modes{display:flex; gap:10px; justify-content:center; margin:22px 0 6px;}
-  .modes button{font-family:inherit; font-size:18px; padding:11px 28px; border-radius:999px;
-    border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;}
-  .modes button.on{background:var(--soft); border-color:var(--c); color:var(--ink);}
+  .modes button{font-family:inherit; font-size:18px; padding:12px 26px; border-radius:999px;
+    border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;
+    display:flex; align-items:center; gap:9px; transition:.25s;}
+  .modes button b{display:inline-flex; width:24px; height:24px; border-radius:50%;
+    background:#efece5; color:#a9a194; font-size:14px; font-weight:normal;
+    align-items:center; justify-content:center;}
+  .modes button:hover{border-color:var(--c);}
+  .modes button.on{background:var(--c); border-color:var(--c); color:#fff;}
+  .modes button.on b{background:rgba(255,255,255,.3); color:#fff;}
+  .howto{text-align:center; font-size:17px; color:var(--ink2); margin:22px 0 2px;}
+  .howto b{color:var(--ink); font-weight:normal;}
 
+  s{text-decoration:none;}
+  .cbhead{font-size:16.5px; color:var(--ink2); margin-bottom:12px;}
+  .cbhead s{font-size:14px; color:#a9a194;}
   .note{text-align:center; color:var(--ink2); font-size:15.5px; margin:10px 0 22px;}
 
   .stage{display:grid; grid-template-columns:1.1fr 1fr; gap:18px; align-items:start;}
@@ -50,6 +61,11 @@
 
   .mapbox{background:#f7f5f1; border:1px solid var(--rule); border-radius:8px;
     position:relative; height:520px;}
+  /* 查不到座標的地名不要漂在海上，收進底下這條帶子 */
+  .mapbox.hasband::after{content:"以下地名尚未定位"; position:absolute; left:0; right:0;
+    bottom:0; height:62px; background:#f1eee8; border-top:1px dashed var(--rule);
+    border-radius:0 0 8px 8px; font-size:12.5px; color:#a9a194; padding:5px 0 0 12px;}
+  .mapbox .spot.nogeo{z-index:2;}
   .mapbox svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .spot{position:absolute; transform:translate(-50%,-50%); background:none; border:0;
     font-family:inherit; cursor:pointer; text-align:center; padding:4px;}
@@ -85,7 +101,10 @@
     color:#a9a194;}
   .chip.on .no{color:var(--sc, var(--c));}
   .chip.nogeo{border-style:dashed;}
-  .chip:disabled{cursor:default;}
+  .chip:disabled{cursor:default; opacity:.45;}
+  .chip.done{border-color:var(--sc, var(--c));}
+  .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
+    background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
   .spot.nogeo:not(.lit):not(.next) i{background:#efece5; border:1px dashed #c9c2b4;}
   .spot.nogeo:not(.lit):not(.next) b{color:#9b9387;}
@@ -180,9 +199,10 @@
 
 <div class="masters" id="masters"></div>
 
+<p class="howto" id="howto"></p>
 <div class="modes">
-  <button id="bMap" class="on">點地圖</button>
-  <button id="bLife">一步一步認識他</button>
+  <button id="bMap" class="on"><b>①</b> 看他去過哪裡</button>
+  <button id="bLife"><b>②</b> 一站一站走完他的一生</button>
 </div>
 <p class="note" id="modeNote"></p>
 <p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
@@ -223,25 +243,21 @@ const DATA = /*__DATA__*/null;
 const PROFILES = /*__PROFILES__*/null;
 const ERAS = /*__ERAS__*/null;
 const PICS = /*__PICS__*/null;
-let mi = 0, mode = "map", step = 0, cur = -1;
+let mi = 0, mode = "map", step = 0, cur = -1, 回看 = -1;
 
 const el = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 
-/* 有 CHGIS 座標的就用真實經緯度擺位；整組都沒座標才退回示意排列 */
+/* 固定投影：六位祖師共用同一張地圖，位置才能互相比較，也才看得出誰往北誰往南。
+   範圍涵蓋黃河到嶺南。 */
+const LON0 = 104, LON1 = 123, LAT0 = 20, LAT1 = 40.5;
+const px = lon => 4 + (lon - LON0) / (LON1 - LON0) * 92;
+const py = lat => 96 - (lat - LAT0) / (LAT1 - LAT0) * 92;
+
 function geoLayout(nodes){
   const g = nodes.map(n => (n.事 ? (n.事.find(e=>e.座標)||{}).座標 : n.座標) || null);
   if(!g.some(Boolean)) return null;
-  const xs = g.filter(Boolean).map(c=>c.經度), ys = g.filter(Boolean).map(c=>c.緯度);
-  let x0 = Math.min(...xs), x1 = Math.max(...xs);
-  let y0 = Math.min(...ys), y1 = Math.max(...ys);
-  if(x1-x0 < 1.5){ const m=(x0+x1)/2; x0=m-0.75; x1=m+0.75; }
-  if(y1-y0 < 1.5){ const m=(y0+y1)/2; y0=m-0.75; y1=m+0.75; }
-  const out = g.map(c => c ? {
-    x: 14 + (c.經度 - x0)/(x1-x0) * 72,
-    y: 82 - (c.緯度 - y0)/(y1-y0) * 64,   // 緯度越高越靠上
-    geo: true,
-  } : null);
+  const out = g.map(c => c ? { x: px(c.經度), y: py(c.緯度), geo: true } : null);
   // 同一個治所座標會有好幾個地點（少林寺、香山、洛陽都歸洛陽縣），
   // 疊在一起就看不到字，依固定角度散開一小圈。散開只是為了看得清楚，
   // 座標本身仍是該行政地名的治所點，頁尾已註明。
@@ -249,7 +265,7 @@ function geoLayout(nodes){
   out.forEach((p,i)=>{ if(p){ const k=p.x.toFixed(1)+","+p.y.toFixed(1); (群[k]=群[k]||[]).push(i); } });
   Object.values(群).forEach(ids=>{
     if(ids.length<2) return;
-    const r = 5.5 + ids.length*0.6;
+    const r = 1.9 + ids.length*0.35;
     ids.forEach((i,k)=>{
       const a = (Math.PI*2*k)/ids.length - Math.PI/2;
       out[i].x += Math.cos(a)*r;
@@ -315,8 +331,9 @@ function renderMap(){
   let k = 0;
   const 未定位 = pts.filter(p=>!p).length;
   nodes.forEach((_,i)=>{ if(!pts[i]){
-    pts[i] = { x: 10 + (k*(80/Math.max(1,未定位-1||1))), y: 93, geo:false }; k++;
+    pts[i] = { x: 14 + (k*(72/Math.max(1,未定位-1||1))), y: 97.5, geo:false }; k++;
   }});
+  el("mapbox").classList.toggle("hasband", 未定位 > 0);
   el("mapNote").textContent = geo
     ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，虛線框的地名尚未定位。"
               : "圓點是歷史地理系統定位的真實位置。")
@@ -334,13 +351,30 @@ function renderMap(){
     b.innerHTML = '<i>' + ((mode==="map") ? "" : (i+1)) + '</i><b>'+esc(label)+badge+'</b>';
     box.appendChild(b);
   });
+  // 底圖：海岸線與黃河、長江。座標是概略輪廓，只為了讓人認得出這是哪裡。
+  const 海岸 = [[119.8,39.2],[121.0,38.0],[121.8,37.5],[120.3,36.0],[119.2,35.0],
+    [120.3,34.3],[120.9,32.5],[121.8,31.4],[121.1,30.3],[122.0,29.5],[121.3,28.3],
+    [120.2,27.2],[119.5,26.0],[118.4,24.5],[116.8,23.5],[114.8,22.6],[113.5,22.2],
+    [112.0,21.6],[110.4,21.0],[109.5,21.6]];
+  const 黃河 = [[110.4,34.8],[112.5,34.8],[114.2,35.4],[115.8,35.9],[117.2,36.6],
+    [118.6,37.4],[119.1,37.8]];
+  const 長江 = [[106.6,29.6],[108.6,30.5],[111.2,30.6],[113.1,30.6],[114.3,30.6],
+    [116.0,29.9],[117.6,30.6],[118.8,31.2],[119.6,31.8],[120.6,31.9],[121.6,31.4]];
+  const line = a => a.map((c,i)=>(i?"L":"M")+px(c[0]).toFixed(1)+" "+py(c[1]).toFixed(1)).join(" ");
+  const 底圖 = geo
+    ? '<path d="'+line(海岸)+'" fill="none" stroke="#c9c2b4" stroke-width=".7"/>'
+      + '<path d="'+line(黃河)+'" fill="none" stroke="#b9c6cf" stroke-width=".9"/>'
+      + '<path d="'+line(長江)+'" fill="none" stroke="#b9c6cf" stroke-width="1.1"/>'
+      + '<text x="'+px(109.5).toFixed(1)+'" y="'+py(37.2).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">黃河</text>'
+      + '<text x="'+px(106.2).toFixed(1)+'" y="'+py(28.8).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">長江</text>'
+    : "";
   // 連線
   const gp = pts.filter(q=>q.geo);
   const d = gp.map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" ");
-  el("paths").innerHTML = '<path d="'+d+'" fill="none" stroke="'+p.色
-    + '" stroke-opacity=".22" stroke-width=".6" vector-effect="non-scaling-stroke"/>';
+  el("paths").innerHTML = 底圖 + '<path d="'+d+'" fill="none" stroke="'+p.色
+    + '" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 1.6"/>';
   el("paths").setAttribute("viewBox","0 0 100 100");
-  el("paths").setAttribute("preserveAspectRatio","none");
+  el("paths").setAttribute("preserveAspectRatio","xMidYMid meet");
   el("chips").innerHTML = nodes.map((s,i)=>{
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const n = (mode==="map" && s.事.length>1) ? '<span class="n">'+s.事.length+' 件</span>' : "";
@@ -380,9 +414,11 @@ function decollide(){
 
 function paintSpots(){
   document.querySelectorAll(".chip").forEach((c,i)=>{
-    const on = (mode==="map") ? (i===cur) : (i<step);
+    const 看 = (回看 >= 0 && 回看 < step) ? 回看 : step-1;
+    const on = (mode==="map") ? (i===cur) : (i === 看);
     c.classList.toggle("on", on);
-    c.disabled = (mode!=="map" && i!==step);
+    c.classList.toggle("done", mode!=="map" && i < step);
+    c.disabled = (mode!=="map" && i > step);
   });
   document.querySelectorAll(".spot").forEach((b,i)=>{
     const geo = !b.classList.contains("nogeo");
@@ -395,7 +431,8 @@ function paintSpots(){
       if(i<step) b.classList.add("lit");
       else if(i===step) b.classList.add("next");
       else b.classList.add("dim");
-      if(i===step-1) b.classList.add("cur");
+      const 看 = (回看 >= 0 && 回看 < step) ? 回看 : step-1;
+      if(i === 看) b.classList.add("cur");
     }
   });
 }
@@ -414,6 +451,23 @@ function stationHtml(s, head){
     + '<div class="src">'+esc(s.出處.書名)+'　卷'+s.出處.卷+'　'+esc(s.出處.經號)+'</div>'
     + (kws ? '<div class="kws">'+kws+'</div>' : "")
     + (s.異文提醒 ? '<div class="variant">異文　'+esc(s.異文提醒)+'</div>' : "");
+}
+
+function renderHowto(){
+  const p = DATA.祖師[mi], n = (p.站||[]).length;
+  let t;
+  if(mode === "map"){
+    t = (cur < 0)
+      ? '現在看的是 <b>' + esc(p.介面名) + '</b>。地圖上任一個圓點或下面任一個地名，點下去試試。'
+      : '換一個地方點點看，或按上面 <b>②</b> 從頭走一次他的一生。';
+  } else {
+    t = (step === 0)
+      ? '<b>' + esc(p.介面名) + '</b> 一共 ' + n + ' 站。點地圖上那顆會跳動的燈，從第一站開始。'
+      : (step > n
+          ? '走完了。上面換一位祖師，或按 <b>①</b> 回到地圖。'
+          : '已經點亮 ' + step + ' 站，剩下 ' + (n - step) + ' 站。繼續點會跳的那顆。');
+  }
+  el("howto").innerHTML = t;
 }
 
 function renderPanel(){
@@ -451,7 +505,10 @@ function renderPanel(){
       + (nx ? '<button class="nextbtn" onclick="gotoMaster('+(mi+1)+')">接著認識　'
               + esc(nx.介面名) + ((nx.站&&nx.站.length)?'':'（建置中）') + '</button>' : "");
   } else {
-    el("panel").innerHTML = stationHtml(st[step-1], "第 "+step+" 站　"+esc(st[step-1].地 || "（原典未載地點）"));
+    const idx = (回看 >= 0 && 回看 < step) ? 回看 : step-1;
+    el("panel").innerHTML = stationHtml(st[idx], "第 "+(idx+1)+" 站　"+esc(st[idx].地 || "（原典未載地點）"))
+      + (回看 >= 0 && 回看 < step-1
+          ? '<p class="backhint">正在回看第 '+(idx+1)+' 站。點那顆會跳的燈可以繼續往下走。</p>' : "");
   }
   el("prog").textContent = "已點亮 " + Math.min(step, st.length) + " ／ " + st.length;
 }
@@ -596,8 +653,8 @@ function renderSources(){
 
 function gotoMaster(i){
   if(!(DATA.祖師[i].站||[]).length) return;
-  mi = i; step = 0; cur = -1;
-  renderMasters(); renderMap(); renderPanel();
+  mi = i; step = 0; cur = -1; 回看 = -1;
+  renderMasters(); renderMap(); renderPanel(); renderHowto();
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
@@ -607,8 +664,10 @@ el("masters").addEventListener("click", e=>{
 });
 function pick(i){
   if(mode==="map"){ cur = i; }
-  else { if(i!==step) return; step++; }
-  paintSpots(); renderPanel();
+  else if(i === step){ step++; 回看 = -1; }       // 點會跳的那顆＝前進一站
+  else if(i < step){ 回看 = i; }                   // 點已經亮的＝回去看那一站
+  else return;                                     // 還沒走到的不給點
+  paintSpots(); renderPanel(); renderHowto();
 }
 el("mapbox").addEventListener("click", e=>{
   const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
@@ -617,16 +676,16 @@ el("chips").addEventListener("click", e=>{
   const c = e.target.closest(".chip"); if(c && !c.disabled) pick(+c.dataset.i);
 });
 function setMode(m){
-  mode = m; step = 0; cur = -1;
+  mode = m; step = 0; cur = -1; 回看 = -1;
   el("bMap").classList.toggle("on", m==="map");
   el("bLife").classList.toggle("on", m==="life");
   el("modeNote").textContent = (m==="map")
     ? "點到哪裡，那裡就亮，右邊出現他在那裡說過的話、遇到的人。"
     : "跳動的那盞燈是下一站。一盞一盞點亮，走完他的一生。";
-  renderMap(); renderPanel();
+  renderMap(); renderPanel(); renderHowto();
 }
-el("bMap").onclick = ()=>setMode("map");
-el("bLife").onclick = ()=>setMode("life");
+el("bMap").onclick = ()=>setMode("map");      // 已在地圖模式時＝重設，面板回到提示
+el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第一站重走
 
 renderMasters(); renderLines(); renderMap(); setMode("map");
 </script>
