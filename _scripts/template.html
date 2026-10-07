@@ -89,6 +89,30 @@
   .nextbtn{display:block; margin:18px auto 0; font-family:inherit; font-size:19px;
     padding:12px 34px; border-radius:999px; border:1px solid var(--c);
     background:var(--c); color:#fff; cursor:pointer;}
+  /* ── 七面向檔案 ── */
+  #profile{margin-top:40px;}
+  .pf h2{font-size:27px; margin:0 0 4px; font-weight:normal; letter-spacing:2px;}
+  .pf .alias{color:var(--ink2); font-size:16px; margin:0 0 6px;}
+  .sec{border-top:1px solid var(--rule); padding:22px 0 6px;}
+  .sec h3{font-size:22px; margin:0 0 14px; font-weight:normal; color:var(--c); letter-spacing:2px;}
+  .sec .empty{color:var(--ink2); font-size:16.5px; background:#f5f3ee;
+    border:1px dashed var(--rule); border-radius:4px; padding:14px 18px;}
+  .ent{margin:0 0 20px; display:grid; grid-template-columns:7.5em 1fr; gap:0 18px;}
+  @media (max-width:700px){ .ent{grid-template-columns:1fr; gap:6px;} }
+  .ent .lab{font-size:17px; color:var(--ink2); padding-top:3px;}
+  .ent .lab s{display:block; text-decoration:none; font-size:14.5px; color:#a9a194; margin-top:2px;}
+  .ent .q{background:#fff; border:1px solid var(--rule); border-left:4px solid var(--c);
+    border-radius:4px; padding:15px 18px; font-size:19.5px; line-height:2;}
+  .ent .q s{display:block; text-decoration:none; font-size:14.5px; color:var(--ink2);
+    margin-top:9px; letter-spacing:0;}
+  .ppl{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:700px){ .ppl{grid-template-columns:1fr;} }
+  .ppl .card{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:16px 18px;}
+  .ppl .nm{font-size:20px;}
+  .ppl .who{font-size:15px; color:var(--ink2); margin-left:8px;}
+  .ppl .q2{font-size:17px; line-height:1.95; color:var(--ink); margin-top:9px;}
+  .ppl .rf2{font-size:14px; color:var(--ink2); margin-top:7px;}
+
   .foot{margin-top:34px; padding-top:18px; border-top:1px solid var(--rule);
     color:var(--ink2); font-size:15.5px; text-align:center; line-height:2;}
   details{margin-top:10px; font-size:15.5px; color:var(--ink2);}
@@ -119,6 +143,8 @@
 
 <p class="prog" id="prog"></p>
 
+<div id="profile"></div>
+
 <div class="foot">
   實心圓點的位置取自<strong>哈佛・復旦中國歷史地理資訊系統</strong>，依各祖師在世年份查得的治所座標；
   虛線圓點尚未定位。今日的省市仍待補。<br>
@@ -129,6 +155,7 @@
 
 <script>
 const DATA = /*__DATA__*/null;
+const PROFILES = /*__PROFILES__*/null;
 let mi = 0, mode = "map", step = 0, cur = -1;
 
 const el = id => document.getElementById(id);
@@ -249,6 +276,7 @@ function renderMap(){
   }).join("");
   paintSpots();
   renderSources();
+  renderProfile();
 }
 
 /* 標籤避讓：撞到就把字翻到點的上方，再撞就往下拉開。
@@ -348,6 +376,41 @@ function renderPanel(){
     el("panel").innerHTML = stationHtml(st[step-1], "第 "+step+" 站　"+esc(st[step-1].地 || "（原典未載地點）"));
   }
   el("prog").textContent = "已點亮 " + Math.min(step, st.length) + " ／ " + st.length;
+}
+
+const 節序 = ["生平", "參學歷程", "開悟因緣", "教學風格", "歷史定位", "交集人物"];
+
+function renderProfile(){
+  const p = DATA.祖師[mi];
+  const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
+  if(!f){ el("profile").innerHTML = ""; return; }
+  let h = '<div class="pf"><h2>' + esc(p.介面名) + '</h2>';
+  if(p.各書異寫 && p.各書異寫.length)
+    h += '<p class="alias">各書異寫　' + p.各書異寫.map(esc).join("　") + '</p>';
+  for(const k of 節序){
+    const rows = f[k] || [];
+    h += '<div class="sec"><h3>' + k + '</h3>';
+    if(!rows.length){
+      h += '<p class="empty">原典未載。這一項留白，不補寫。</p>';
+    } else if(k === "交集人物"){
+      h += '<div class="ppl">' + rows.map(c =>
+        '<div class="card"><span class="nm">' + esc(c.姓名) + '</span>'
+        + (c.身分 ? '<span class="who">' + esc(c.身分) + '</span>' : "")
+        + '<div class="q2">' + esc(c.原文) + '</div>'
+        + '<div class="rf2">' + esc(c.出處.書名) + '　卷' + c.出處.卷 + '　' + esc(c.出處.經號) + '</div>'
+        + '</div>').join("") + '</div>';
+    } else {
+      h += rows.map(e =>
+        '<div class="ent"><div class="lab">' + esc(e.標題)
+        + (e.年 ? '<s>' + esc(e.年) + '</s>' : "") + '</div>'
+        + '<div class="q">' + esc(e.原文)
+        + '<s>' + esc(e.出處.書名) + '　卷' + e.出處.卷 + '　' + esc(e.出處.經號) + '</s>'
+        + '</div></div>').join("");
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  el("profile").innerHTML = h;
 }
 
 function renderSources(){
