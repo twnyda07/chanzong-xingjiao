@@ -46,26 +46,40 @@
   .spot i{display:block; width:18px; height:18px; border-radius:50%; background:#d9d3c8;
     margin:0 auto 5px; transition:.35s;}
   .spot b{font-size:15px; font-weight:normal; color:var(--ink2); transition:.3s; white-space:nowrap;}
-  .spot.lit i{background:var(--c); box-shadow:0 0 0 7px color-mix(in srgb,var(--c) 20%,transparent);}
-  .spot.lit b{color:var(--c);}
-  .spot.cur i{box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 26%,transparent);}
-  .spot.next i{border:2px solid var(--c); background:#fff; animation:pulse 1.6s infinite;}
-  .spot.next b{color:var(--c);}
+  .spot i{font-style:normal; font-size:11.5px; line-height:18px; color:transparent;
+    text-align:center; font-family:inherit;}
+  .spot.lit i{background:var(--sc, var(--c)); color:#fff;
+    box-shadow:0 0 0 7px color-mix(in srgb, var(--sc, var(--c)) 20%, transparent);}
+  .spot.lit b{color:var(--sc, var(--c));}
+  .spot.cur i{box-shadow:0 0 0 10px color-mix(in srgb, var(--sc, var(--c)) 30%, transparent);}
+  .spot.next i{border:2px solid var(--sc, var(--c)); background:#fff;
+    color:var(--sc, var(--c)); line-height:14px; animation:pulse 1.6s infinite;}
+  .spot.next b{color:var(--sc, var(--c));}
   .spot.dim{opacity:.45;}
   /* 地圖上只放圓點，地名放在下面那排大字籤，從根本上不會互相壓字 */
   .spot b{opacity:0; transition:.25s; position:absolute; left:50%;
           transform:translateX(-50%); top:24px; background:var(--paper);
           padding:1px 6px; border-radius:4px;}
-  .spot.lit b, .spot.next b, .spot:hover b, .spot:focus b{opacity:1;}
+  /* 只顯示「正在看的這一站」與「下一站」的地名。其餘靠點上的編號與下方籤列辨識，
+     否則同一個地方的好幾站會把地名疊成一團。 */
+  .spot.cur b, .spot:hover b, .spot:focus b{opacity:1;}
+  /* 下一站不顯示地名——它會跳動、也有編號，而且常和剛點過的那站同一個地方，
+     兩個地名疊在一起反而看不清 */
   .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0;}
   .chip{font-family:inherit; font-size:18px; padding:9px 18px; border-radius:999px;
     border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;}
   .chip .n{font-size:14px; color:#a9a194; margin-left:6px;}
-  .chip.on{background:var(--soft); border-color:var(--c); color:var(--c);}
+  .chip.on{background:color-mix(in srgb, var(--sc, var(--c)) 14%, #fff);
+    border-color:var(--sc, var(--c)); color:var(--sc, var(--c));}
+  .chip .no{display:inline-block; min-width:1.6em; margin-right:7px; font-size:14px;
+    color:#a9a194;}
+  .chip.on .no{color:var(--sc, var(--c));}
   .chip.nogeo{border-style:dashed;}
   .chip:disabled{cursor:default;}
-  .spot.nogeo i{background:#efece5; border:1px dashed #c9c2b4;}
-  .spot.nogeo b{color:#9b9387;}
+  /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
+  .spot.nogeo:not(.lit):not(.next) i{background:#efece5; border:1px dashed #c9c2b4;}
+  .spot.nogeo:not(.lit):not(.next) b{color:#9b9387;}
+  .spot.nogeo.lit i{border:1px dashed #fff;}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent);}
     50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--c) 0%,transparent);}}
 
@@ -285,7 +299,7 @@ function renderMap(){
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const badge = (mode==="map" && s.事.length>1)
       ? '<em style="font-style:normal; font-size:13.5px; color:var(--ink2)">　'+s.事.length+' 件</em>' : "";
-    b.innerHTML = '<i></i><b>'+esc(label)+badge+'</b>';
+    b.innerHTML = '<i>' + ((mode==="map") ? "" : (i+1)) + '</i><b>'+esc(label)+badge+'</b>';
     box.appendChild(b);
   });
   // 連線
@@ -298,7 +312,9 @@ function renderMap(){
   el("chips").innerHTML = nodes.map((s,i)=>{
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const n = (mode==="map" && s.事.length>1) ? '<span class="n">'+s.事.length+' 件</span>' : "";
-    return '<button class="chip'+(pts[i].geo?"":" nogeo")+'" data-i="'+i+'">'
+    const sc = (mode==="map") ? "" : ' style="--sc:'+站色[i % 站色.length]+'"';
+    return '<button class="chip'+(pts[i].geo?"":" nogeo")+'"'+sc+' data-i="'+i+'">'
+      + ((mode==="map") ? "" : '<span class="no">'+(i+1)+'</span>')
       + esc(label) + n + '</button>';
   }).join("");
   paintSpots();
@@ -338,10 +354,13 @@ function paintSpots(){
     c.disabled = (mode!=="map" && i!==step);
   });
   document.querySelectorAll(".spot").forEach((b,i)=>{
-    b.className = "spot";
+    const geo = !b.classList.contains("nogeo");
+    b.className = "spot" + (geo ? "" : " nogeo");
     if(mode==="map"){
+      b.style.removeProperty("--sc");
       if(i===cur) b.classList.add("lit","cur");
     } else {
+      b.style.setProperty("--sc", 站色[i % 站色.length]);
       if(i<step) b.classList.add("lit");
       else if(i===step) b.classList.add("next");
       else b.classList.add("dim");
@@ -405,6 +424,11 @@ function renderPanel(){
   }
   el("prog").textContent = "已點亮 " + Math.min(step, st.length) + " ／ " + st.length;
 }
+
+/* 生平模式每一站給一個可分辨的顏色。低彩度、同調性，不走螢光。 */
+const 站色 = ["#3d6ea6","#2f8b78","#b8822c","#c05540","#7a5f9e","#95683d",
+              "#4e8fa8","#5f8f5a","#a8743f","#8a6f9e","#c08a4a","#4f8f86",
+              "#6b7fa8","#7f9154"];
 
 const 節序 = ["生平", "參學歷程", "開悟因緣", "教學風格", "歷史定位", "交集人物"];
 
