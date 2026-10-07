@@ -103,6 +103,33 @@
   .nextbtn{display:block; margin:18px auto 0; font-family:inherit; font-size:19px;
     padding:12px 34px; border-radius:999px; border:1px solid var(--c);
     background:var(--c); color:#fff; cursor:pointer;}
+  /* ── 六條生命線 ── */
+  .lifelines{margin:0 0 22px; padding:18px 20px; background:#f7f5f1;
+    border:1px solid var(--rule); border-radius:8px;}
+  .lnote{font-size:14px; color:#9b9387; margin:12px 0 0; line-height:1.85;}
+  .lnote b{color:var(--ink2); font-weight:normal;}
+  .lrow{display:grid; grid-template-columns:4.2em 1fr; gap:12px; align-items:center;
+    margin-bottom:9px;}
+  .lrow .nm{font-size:17px;}
+  .ltrack{position:relative; height:26px; background:#efece5; border-radius:13px;}
+  .lspan{position:absolute; top:7px; height:12px; border-radius:6px; opacity:.5;}
+  .levt{position:absolute; top:3px; width:20px; height:20px; border-radius:50%;
+    transform:translateX(-50%); border:2px solid #fff; cursor:pointer; padding:0;
+    font-family:inherit; font-size:13px; color:#fff; line-height:22px; text-align:center;}
+  .levt:hover{transform:translateX(-50%) scale(1.25);}
+  .laxis{display:grid; grid-template-columns:4.2em 1fr; gap:12px; margin-top:4px;}
+  .laxis .ticks{position:relative; height:20px; font-size:13px; color:#a9a194;}
+  .laxis .ticks span{position:absolute; transform:translateX(-50%);}
+  .lpanel{margin-top:14px;}
+  .lpanel .box2{background:#fff; border:1px solid var(--rule); border-radius:6px;
+    padding:16px 18px;}
+  .lpanel .yr{font-size:16px; color:var(--ink2);}
+  .lpanel .yr s{text-decoration:none; color:#a9a194; font-size:14px; margin-left:8px;}
+  .lpanel .q3{font-size:19px; line-height:2; margin-top:10px;}
+  .lpanel .rf3{font-size:14px; color:var(--ink2); margin-top:8px;}
+  .lpanel .warn{margin-top:10px; font-size:14.5px; color:#8a6f3c;
+    background:#faf4e6; border:1px dashed #ddc89a; border-radius:4px; padding:10px 12px;}
+
   /* ── 同字發光 ── */
   .charbar{margin:0 0 22px; padding:18px 20px; background:#f7f5f1;
     border:1px solid var(--rule); border-radius:8px;}
@@ -170,6 +197,14 @@
 <p class="note" id="modeNote"></p>
 <p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
 
+<div class="lifelines">
+  <div class="cbhead">六條生命線　<s>橫軸是西元年。圓點是原典記有年號的事件，點它看原文。</s></div>
+  <div id="lines"></div>
+  <p class="lnote">實心段＝原典記有年號的事件之間。原典只寫「十月一日」「年三十二」這種沒有年份的，
+    不放上線。西元是為了排位置換算的，<b>不是原典的字</b>，網站顯示的一律是原典字樣。</p>
+  <div class="lpanel" id="lpanel"></div>
+</div>
+
 <div class="charbar">
   <div class="cbhead">點一個字，看它在誰的原典裡出現　<s>依出現次數排序，不經挑選</s></div>
   <div class="chars" id="chars"></div>
@@ -197,6 +232,7 @@
 <script>
 const DATA = /*__DATA__*/null;
 const PROFILES = /*__PROFILES__*/null;
+const ERAS = /*__ERAS__*/null;
 let mi = 0, mode = "map", step = 0, cur = -1;
 
 const el = id => document.getElementById(id);
@@ -432,6 +468,81 @@ const 站色 = ["#3d6ea6","#2f8b78","#b8822c","#c05540","#7a5f9e","#95683d",
 
 const 節序 = ["生平", "參學歷程", "開悟因緣", "教學風格", "歷史定位", "交集人物"];
 
+/* ── 六條生命線 ── */
+const 年表 = (function(){
+  const m = {};
+  if(ERAS) (ERAS.換算||[]).forEach(e=>{ m[e.原典字樣] = e; });
+  return m;
+})();
+
+function 事件表(){
+  const out = [];
+  DATA.祖師.forEach((p,pi)=>{
+    const push = (年, 原文, 出處, 來源) => {
+      const e = 年 ? 年表[年] : null;
+      if(e) out.push({ pi, 名:p.介面名, 色:p.色, 年字:年, 西元:e.西元, 註:e.註||"",
+                       原文, 出處, 來源 });
+    };
+    (p.站||[]).forEach(s=>push(s.年, s.原文, s.出處, "行腳"));
+    const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
+    if(f) ["生平","參學歷程","開悟因緣","教學風格","歷史定位"].forEach(k =>
+      (f[k]||[]).forEach(e => push(e.年, e.原文, e.出處, k)));
+  });
+  // 同一位、同一年、同一段原文只留一筆
+  const seen = new Set();
+  return out.filter(e=>{
+    const k = e.名+"|"+e.西元+"|"+e.原文.slice(0,12);
+    if(seen.has(k)) return false; seen.add(k); return true;
+  });
+}
+
+const 事件 = 事件表();
+const Y0 = 500, Y1 = 730;
+const pos = y => ((y - Y0) / (Y1 - Y0)) * 100;
+
+function renderLines(){
+  if(!事件.length){ el("lines").innerHTML = ""; return; }
+  let h = "";
+  DATA.祖師.forEach((p,pi)=>{
+    // 同一年的事件併成一個點，否則會完全疊在一起看不出有幾件
+    const byYear = {};
+    事件.filter(e=>e.pi===pi).forEach(e=>{ (byYear[e.西元]=byYear[e.西元]||[]).push(e); });
+    const evs = Object.keys(byYear).map(Number).sort((a,b)=>a-b)
+      .map(y=>({ 西元:y, 件:byYear[y] }));
+    let span = "";
+    if(evs.length > 1){
+      const a = pos(evs[0].西元), b = pos(evs[evs.length-1].西元);
+      span = '<span class="lspan" style="left:'+a+'%; width:'+(b-a)+'%; background:'+p.色+'"></span>';
+    }
+    h += '<div class="lrow"><span class="nm" style="color:'+p.色+'">'+esc(p.介面名)+'</span>'
+      + '<span class="ltrack">' + span
+      + evs.map(e=>'<button class="levt" data-pi="'+pi+'" data-y="'+e.西元
+          + '" style="left:'+pos(e.西元)+'%; background:'+p.色
+          + (e.件.length>1 ? '; width:26px; height:26px; top:0' : '')
+          + '" title="'+esc(e.件[0].年字)+(e.件.length>1?'　共 '+e.件.length+' 件':'')
+          + '">'+(e.件.length>1 ? e.件.length : '')+'</button>').join("")
+      + '</span></div>';
+  });
+  let ticks = "";
+  for(let y=500; y<=700; y+=50) ticks += '<span style="left:'+pos(y)+'%">'+y+'</span>';
+  h += '<div class="laxis"><span></span><div class="ticks">'+ticks+'</div></div>';
+  el("lines").innerHTML = h;
+}
+
+el("lines") && el("lines").addEventListener("click", e=>{
+  const b = e.target.closest(".levt"); if(!b) return;
+  const pi = +b.dataset.pi, y = +b.dataset.y;
+  const list = 事件.filter(e=>e.pi===pi && e.西元===y);
+  el("lpanel").innerHTML = list.map(ev=>'<div class="box2" style="margin-bottom:10px">'
+    + '<div class="yr">' + esc(ev.名) + '　' + esc(ev.年字)
+    + '<s>換算西元 ' + ev.西元 + '，待覆核</s></div>'
+    + '<div class="q3">' + esc(ev.原文) + '</div>'
+    + '<div class="rf3">' + esc(ev.出處.書名) + '　卷' + ev.出處.卷 + '　' + esc(ev.出處.經號) + '</div>'
+    + (ev.註 ? '<div class="warn">' + esc(ev.註) + '</div>' : "")
+    + '</div>').join("");
+  paintChar();
+});
+
 /* ── 同字發光：字從原典裡數出來，不是我挑的 ── */
 let 選字 = null;
 const 停 = new Set("之也曰於而以者乎矣焉哉所其不我汝為是有一二三十日月年云問答言師大小上下中出入在到來去此彼時即乃又復則與及等何如若可得見知".split(""));
@@ -577,5 +688,5 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");
 el("bLife").onclick = ()=>setMode("life");
 
-renderMasters(); renderChars(); renderMap(); setMode("map");
+renderMasters(); renderChars(); renderLines(); renderMap(); setMode("map");
 </script>

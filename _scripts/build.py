@@ -13,6 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 DATA = os.path.join(ROOT, "_data", "祖師.json")
 PROF = os.path.join(ROOT, "_data", "祖師檔案.json")
+ERAS = os.path.join(ROOT, "_data", "年代對照.json")
 TPL = os.path.join(HERE, "template.html")
 OUT = os.path.join(ROOT, "遊戲.html")
 
@@ -34,6 +35,9 @@ def main():
                        json.dumps(data, ensure_ascii=False, separators=(",", ":")))
     html = html.replace("/*__PROFILES__*/null",
                         json.dumps(prof, ensure_ascii=False, separators=(",", ":")))
+    eras = json.load(open(ERAS, encoding="utf-8"))
+    html = html.replace("/*__ERAS__*/null",
+                        json.dumps(eras, ensure_ascii=False, separators=(",", ":")))
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(html)
     n = sum(len(p.get("站", [])) for p in data["祖師"])
