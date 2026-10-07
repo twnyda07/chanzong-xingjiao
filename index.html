@@ -103,6 +103,21 @@
   .chip.nogeo{border-style:dashed;}
   .chip:disabled{cursor:default; opacity:.45;}
   .chip.done{border-color:var(--sc, var(--c));}
+  .km{margin-top:18px; padding:20px; background:#f7f5f1; border:1px solid var(--rule);
+    border-radius:8px; text-align:center;}
+  .km .kbig{font-size:40px; letter-spacing:2px; color:var(--c);}
+  .km .ksub{font-size:16px; color:var(--ink2); margin-top:2px;}
+  .km table.facts{text-align:left;}
+  .leg{margin:14px 0 0; font-size:16.5px; color:var(--ink2); background:#f7f5f1;
+    border-left:3px solid var(--c); border-radius:3px; padding:11px 14px;}
+  .leg b{color:var(--c); font-weight:normal; font-size:19px;}
+  .leg s{font-size:13.5px; color:#a9a194;}
+  .legs{margin-top:16px; text-align:left;}
+  .legs summary{font-size:16px; color:var(--ink2); cursor:pointer;}
+  .legs table.facts{margin-top:10px; font-size:16px;}
+  .kwarn{font-size:14.5px; color:#8a6f3c; background:#faf4e6; border:1px dashed #ddc89a;
+    border-radius:4px; padding:11px 13px; margin:14px 0 0; line-height:1.85; text-align:left;}
+  .kwarn b{font-weight:normal; color:#6f5a2e;}
   .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
     background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
@@ -437,6 +452,68 @@ function paintSpots(){
   });
 }
 
+/* 行腳距離：用 CHGIS 的治所座標算球面直線距離。
+   這是**算出來的**，不是原典的字，也不是實際走的路——古人翻山繞路一定更遠。
+   沒有座標的站跳過不算，並照實說跳過幾站。 */
+function 公里(a, b){
+  const R = 6371, rad = d => d * Math.PI / 180;
+  const dLat = rad(b.緯度 - a.緯度), dLon = rad(b.經度 - a.經度);
+  const h = Math.sin(dLat/2)**2 + Math.cos(rad(a.緯度)) * Math.cos(rad(b.緯度)) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function 行腳距離(st){
+  let 合計 = 0, 段 = 0, 跳過 = 0, 前 = null, 首 = null, 末 = null;
+  st.forEach(s=>{
+    const c = s.座標;
+    if(!c){ 跳過++; return; }
+    if(!首) 首 = c;
+    末 = c;
+    if(前){
+      const d = 公里(前, c);
+      if(d > 1){ 合計 += d; 段++; }     // 同一個治所座標的相鄰站不重複計
+    }
+    前 = c;
+  });
+  const 直線 = (首 && 末 && 首 !== 末) ? 公里(首, 末) : 0;
+  return { 合計: Math.round(合計), 直線: Math.round(直線), 段, 跳過 };
+}
+
+/* 兩站之間隔了幾年。只有兩站的年號都查得到西元才算，否則照實說原典沒記。
+   西元是換算來的（見 _data/年代對照.json），不是原典的字。 */
+function 年差(a, b){
+  const ea = a.年 ? 年表[a.年] : null, eb = b.年 ? 年表[b.年] : null;
+  if(!ea || !eb) return null;
+  return eb.西元 - ea.西元;
+}
+function 年差文(a, b){
+  const d = 年差(a, b);
+  if(d === null) return "原典沒有記下兩站的年份";
+  if(d === 0) return "同一年";
+  return (d > 0 ? "隔了 " : "早了 ") + Math.abs(d) + " 年";
+}
+
+function 路段表(st){
+  const rows = [];
+  for(let i=1;i<st.length;i++){
+    const a = st[i-1].座標, b = st[i].座標;
+    const 名a = st[i-1].地 || "未載地點", 名b = st[i].地 || "未載地點";
+    if(a && b){
+      const d = Math.round(公里(a,b));
+      if(d < 1) continue;                     // 同地不列
+      rows.push([名a + " → " + 名b, d.toLocaleString() + " 公里", 年差文(st[i-1], st[i])]);
+    } else {
+      rows.push([名a + " → " + 名b, "尚未定位", 年差文(st[i-1], st[i])]);
+    }
+  }
+  if(!rows.length) return "";
+  return '<details class="legs"><summary>每一段走了多遠（' + rows.length + ' 段）</summary>'
+    + '<table class="facts">' + rows.map(r =>
+        '<tr><th style="width:auto">' + esc(r[0]) + '</th>'
+        + '<td style="text-align:right; white-space:nowrap">' + esc(r[1])
+        + '<s style="display:block; font-size:13.5px; color:#a9a194">' + esc(r[2]) + '</s>'
+        + '</td></tr>').join("") + '</table></details>';
+}
+
 function stationHtml(s, head){
   const kws = (s.關鍵詞||[]).map(k=>'<span class="kw">'+esc(k)+'</span>').join("");
   return '<h3>'+head+'</h3>'
@@ -500,13 +577,45 @@ function renderPanel(){
       + '<p class="hint" style="margin-top:40px">點左邊那盞會跳的燈，從第一站開始</p>';
   } else if(step>st.length){
     const nx = DATA.祖師[mi+1];
+    const km = 行腳距離(st);
     el("panel").innerHTML = '<h3>'+esc(p.介面名)+'　走完了</h3>'
       + '<p style="color:var(--ink2); font-size:17px">一共 '+st.length+' 站，全部點亮。</p>'
+      + (km.合計 > 0
+          ? '<div class="km"><div class="kbig">' + km.合計.toLocaleString() + ' 公里</div>'
+            + '<div class="ksub">把這些地方依序連起來的長度</div>'
+            + '<table class="facts" style="margin-top:14px">'
+            + '<tr><th>頭尾相距</th><td>' + km.直線.toLocaleString() + ' 公里</td></tr>'
+            + '<tr><th>算了幾段</th><td>' + km.段 + ' 段'
+            + (km.跳過 ? '（另有 ' + km.跳過 + ' 站尚未定位，沒算進去）' : '') + '</td></tr>'
+            + '</table>'
+            + 路段表(st)
+            + '<p class="kwarn">這是地圖上的<b>直線距離</b>，用歷史地理系統查到的治所座標算的，'
+            + '<b>不是原典的字</b>，也不是他實際走的路——翻山繞路一定更遠。</p></div>'
+          : "")
       + (nx ? '<button class="nextbtn" onclick="gotoMaster('+(mi+1)+')">接著認識　'
               + esc(nx.介面名) + ((nx.站&&nx.站.length)?'':'（建置中）') + '</button>' : "");
   } else {
     const idx = (回看 >= 0 && 回看 < step) ? 回看 : step-1;
-    el("panel").innerHTML = stationHtml(st[idx], "第 "+(idx+1)+" 站　"+esc(st[idx].地 || "（原典未載地點）"))
+    let 段文 = "";
+    if(idx > 0){
+      const a = st[idx-1].座標, b = st[idx].座標;
+      if(a && b){
+        const d = Math.round(公里(a, b));
+        const 年 = 年差文(st[idx-1], st[idx]);
+        段文 = (d < 1)
+          ? '<p class="leg">與上一站同一個地方。　<s>' + esc(年) + '</s></p>'
+          : '<p class="leg">距上一站（' + esc(st[idx-1].地 || "未載地點") + '）約 <b>'
+            + d.toLocaleString() + ' 公里</b>　<s>地圖直線距離，非實際路程</s>'
+            + '<br>' + esc(年) + '</p>';
+      } else {
+        段文 = '<p class="leg">有一端尚未定位，這一段算不出距離。　<s>'
+          + esc(年差文(st[idx-1], st[idx])) + '</s></p>';
+      }
+    }
+    const 是最後 = (step === st.length && idx === st.length - 1);
+    el("panel").innerHTML = stationHtml(st[idx], "第 "+(idx+1)+" 站　"+esc(st[idx].地 || "（原典未載地點）")) + 段文
+      + (是最後 ? '<button class="nextbtn" onclick="step++;paintSpots();renderPanel();renderHowto();">'
+                  + '看他一共走了多遠</button>' : "")
       + (回看 >= 0 && 回看 < step-1
           ? '<p class="backhint">正在回看第 '+(idx+1)+' 站。點那顆會跳的燈可以繼續往下走。</p>' : "");
   }
