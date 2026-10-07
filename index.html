@@ -1,0 +1,394 @@
+<meta charset="utf-8">
+<title>禪宗．祖師行腳</title>
+<style>
+  :root{
+    --paper:#fbfaf7; --card:#fff; --ink:#23201c; --ink2:#6b645b;
+    --rule:#e6e1d8; --accent:#4a5d52; --soft:#eef1ee; --c:#3d6ea6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 0 60px; background:var(--paper); color:var(--ink);
+    font-family:"Songti TC","Noto Serif CJK TC","Source Han Serif TC",serif;
+    font-size:20px; line-height:1.9;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px;}
+
+  header{padding:46px 0 22px; text-align:center;}
+  h1{font-size:40px; margin:0 0 6px; letter-spacing:8px;}
+  header .sub{color:var(--ink2); font-size:18px; letter-spacing:3px;}
+
+  .masters{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:26px 0 8px;}
+  .m{width:124px; padding:16px 8px 13px; border:1px solid var(--rule); border-radius:8px;
+     background:#fff; text-align:center; cursor:pointer; transition:.3s;}
+  .m .face{width:68px; height:82px; margin:0 auto 9px; border-radius:36px 36px 30px 30px;
+     background:linear-gradient(180deg,#efebe3,#e3ded4); display:flex; align-items:center;
+     justify-content:center; color:#b3aa9c; font-size:14px; transition:.4s;}
+  .m b{font-size:22px; font-weight:normal; display:block;}
+  .m s{font-size:14px; color:var(--ink2); text-decoration:none; display:block; margin-top:2px;}
+  .m.on{border-color:transparent; box-shadow:0 0 0 2px var(--mc) inset; transform:translateY(-3px);}
+  .m.on .face{background:color-mix(in srgb,var(--mc) 20%,#fff); color:var(--mc);}
+  .m.on b{color:var(--mc);}
+  .m.todo{opacity:.5; cursor:default;}
+
+  .modes{display:flex; gap:10px; justify-content:center; margin:22px 0 6px;}
+  .modes button{font-family:inherit; font-size:18px; padding:11px 28px; border-radius:999px;
+    border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;}
+  .modes button.on{background:var(--soft); border-color:var(--c); color:var(--ink);}
+
+  .note{text-align:center; color:var(--ink2); font-size:15.5px; margin:10px 0 22px;}
+
+  .stage{display:grid; grid-template-columns:1.1fr 1fr; gap:18px; align-items:start;}
+  @media (max-width:760px){ .stage{grid-template-columns:1fr;} }
+
+  .mapbox{background:#f7f5f1; border:1px solid var(--rule); border-radius:8px;
+    position:relative; height:520px;}
+  .mapbox svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .spot{position:absolute; transform:translate(-50%,-50%); background:none; border:0;
+    font-family:inherit; cursor:pointer; text-align:center; padding:4px;}
+  .spot i{display:block; width:18px; height:18px; border-radius:50%; background:#d9d3c8;
+    margin:0 auto 5px; transition:.35s;}
+  .spot b{font-size:15px; font-weight:normal; color:var(--ink2); transition:.3s; white-space:nowrap;}
+  .spot.lit i{background:var(--c); box-shadow:0 0 0 7px color-mix(in srgb,var(--c) 20%,transparent);}
+  .spot.lit b{color:var(--c);}
+  .spot.cur i{box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 26%,transparent);}
+  .spot.next i{border:2px solid var(--c); background:#fff; animation:pulse 1.6s infinite;}
+  .spot.next b{color:var(--c);}
+  .spot.dim{opacity:.45;}
+  /* 地圖上只放圓點，地名放在下面那排大字籤，從根本上不會互相壓字 */
+  .spot b{opacity:0; transition:.25s; position:absolute; left:50%;
+          transform:translateX(-50%); top:24px; background:var(--paper);
+          padding:1px 6px; border-radius:4px;}
+  .spot.lit b, .spot.next b, .spot:hover b, .spot:focus b{opacity:1;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0;}
+  .chip{font-family:inherit; font-size:18px; padding:9px 18px; border-radius:999px;
+    border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;}
+  .chip .n{font-size:14px; color:#a9a194; margin-left:6px;}
+  .chip.on{background:var(--soft); border-color:var(--c); color:var(--c);}
+  .chip.nogeo{border-style:dashed;}
+  .chip:disabled{cursor:default;}
+  .spot.nogeo i{background:#efece5; border:1px dashed #c9c2b4;}
+  .spot.nogeo b{color:#9b9387;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent);}
+    50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--c) 0%,transparent);}}
+
+  .panel{border:1px solid var(--rule); border-radius:8px; background:#fff;
+    padding:24px 26px; min-height:520px; max-height:520px; overflow:auto;}
+  .panel .hint{color:var(--ink2); font-size:17px; text-align:center; margin-top:150px;}
+  .panel h3{margin:0 0 12px; font-size:26px; font-weight:normal;}
+  table.facts{width:100%; border-collapse:collapse; font-size:17px; margin:0 0 16px;}
+  table.facts th{text-align:left; font-weight:normal; color:var(--ink2); width:5.5em;
+    padding:7px 10px 7px 0; border-bottom:1px solid var(--rule); vertical-align:top;}
+  table.facts td{padding:7px 0; border-bottom:1px solid var(--rule);}
+  .quote{background:#f7f5f1; border-left:4px solid var(--c); border-radius:4px;
+    padding:18px 20px; font-size:21px; line-height:2.05; margin:0 0 8px;}
+  .src{font-size:15px; color:var(--ink2);}
+  .kws{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0;}
+  .kw{background:var(--c); color:#fff; border-radius:6px; padding:12px 20px;
+    font-size:26px; letter-spacing:4px; white-space:nowrap;}
+  .variant{margin-top:16px; background:#f3f2ee; border:1px dashed var(--rule);
+    border-radius:4px; padding:14px 16px; font-size:16px; color:var(--ink2);}
+  .prog{text-align:center; color:var(--ink2); font-size:16px; margin:14px 0 0;}
+  .nextbtn{display:block; margin:18px auto 0; font-family:inherit; font-size:19px;
+    padding:12px 34px; border-radius:999px; border:1px solid var(--c);
+    background:var(--c); color:#fff; cursor:pointer;}
+  .foot{margin-top:34px; padding-top:18px; border-top:1px solid var(--rule);
+    color:var(--ink2); font-size:15.5px; text-align:center; line-height:2;}
+  details{margin-top:10px; font-size:15.5px; color:var(--ink2);}
+  details summary{cursor:pointer;}
+  details li{margin:3px 0;}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>禪宗．祖師行腳</h1>
+  <div class="sub">達摩　慧可　僧璨　道信　弘忍　惠能</div>
+</header>
+
+<div class="masters" id="masters"></div>
+
+<div class="modes">
+  <button id="bMap" class="on">點地圖</button>
+  <button id="bLife">一步一步認識他</button>
+</div>
+<p class="note" id="modeNote"></p>
+<p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
+
+<div class="stage">
+  <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
+    <div class="chips" id="chips"></div></div>
+  <div class="panel" id="panel"><p class="hint">先選一位祖師</p></div>
+</div>
+
+<p class="prog" id="prog"></p>
+
+<div class="foot">
+  實心圓點的位置取自<strong>哈佛・復旦中國歷史地理資訊系統</strong>，依各祖師在世年份查得的治所座標；
+  虛線圓點尚未定位。今日的省市仍待補。<br>
+  畫面上的引文逐字取自原典，建置時以程式與原典逐字比對，對不上不給編。
+  <details id="srcList"><summary>這一位用到的出處</summary><ul id="srcUl"></ul></details>
+</div>
+</div>
+
+<script>
+const DATA = {"說明":"欄位只有三種：原文、出處、事實。沒有可以放白話轉述的欄位——這是用結構擋，不是靠自律。","用字體例":{"引文":"逐字照該書原字。景德傳燈錄作「達磨」「慧能」，壇經作「惠能」，引文一律不改。","介面":"介面標題與事實欄位用通行寫法「達摩」「惠能」，並在祖師頁標出各書異寫。"},"今地":"全部待歷史地理系統（CHGIS 帶年份／中研院 CCTS／中研院歷史地名）定位後填入，給到省・市。未定位前一律 null，不自己推算。","祖師":[{"序":1,"介面名":"達摩","各書異寫":["菩提達磨（景德傳燈錄）","菩提達摩（續高僧傳）"],"色":"#3d6ea6","站":[{"地":"南海","地依據":"師汎重溟凡三周寒暑達于南海。","今地":null,"年":"梁．普通年間","人":["蕭昂"],"原文":"達于南海。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"南海郡","地類":"州縣","座標":{"經度":113.25607,"緯度":23.13462,"查詢名":"南海郡","CHGIS編號":"hvd_34191","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34191","年代範圍":"-214 ~ 589"}},{"地":"南海","地依據":"師汎重溟凡三周寒暑達于南海。","今地":null,"年":"梁．普通年間","人":["蕭昂","梁武帝"],"原文":"廣州刺史蕭昂具主禮迎接。表聞武帝。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"南海郡","地類":"州縣","座標":{"經度":113.25607,"緯度":23.13462,"查詢名":"南海郡","CHGIS編號":"hvd_34191","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34191","年代範圍":"-214 ~ 589"}},{"地":"金陵","地依據":"十月一日至金陵。","今地":null,"年":"十月一日","人":["梁武帝"],"原文":"帝問曰。朕即位已來。造寺寫經度僧不可勝紀。有何功德。師曰。並無功德。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"建康縣","地類":"州縣","座標":{"經度":118.76899,"緯度":32.05256,"查詢名":"建康縣","CHGIS編號":"hvd_40525","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_40525","年代範圍":"313 ~ 588"}},{"地":"金陵","地依據":"十月一日至金陵。","今地":null,"年":"十月一日","人":["梁武帝"],"原文":"帝又問。如何是聖諦第一義。師曰。廓然無聖。帝曰。對朕者誰。師曰。不識。帝不領悟。","關鍵詞":["廓然無聖","不識"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"建康縣","地類":"州縣","座標":{"經度":118.76899,"緯度":32.05256,"查詢名":"建康縣","CHGIS編號":"hvd_40525","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_40525","年代範圍":"313 ~ 588"}},{"地":"江北","地依據":"師知機不契。是月十九日潛迴江北。","今地":null,"年":"是月十九日","人":[],"原文":"師知機不契。是月十九日潛迴江北。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"地類":"泛稱"},{"地":"洛陽","地依據":"十一月二十三日屆于洛陽","今地":null,"年":"十一月二十三日","人":[],"原文":"十一月二十三日屆于洛陽。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"州縣","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"嵩山少林寺","地依據":"寓止于嵩山少林寺。","今地":null,"年":null,"人":[],"原文":"寓止于嵩山少林寺。面壁而坐終日默然。人莫之測。謂之壁觀婆羅門。","關鍵詞":["壁觀婆羅門"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"寺院","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"嵩山少林寺","地依據":"寓止于嵩山少林寺。","今地":null,"年":"十二月九日夜","人":["神光"],"原文":"其年十二月九日夜天大雨雪。光堅立不動。遲明積雪過膝。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"寺院","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"嵩山少林寺","地依據":"寓止于嵩山少林寺。","今地":null,"年":"十二月九日夜","人":["神光","慧可"],"原文":"潛取利刀自斷左臂。置于師前。師知是法器。乃曰。諸佛最初求道為法忘形。汝今斷臂吾前。求亦可在。師遂因與易名曰慧可。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"寺院","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"嵩山少林寺","地依據":"寓止于嵩山少林寺。","今地":null,"年":null,"人":["慧可"],"原文":"光曰。我心未寧。乞師與安。師曰。將心來與汝安。曰覓心了不可得。師曰。我與汝安心竟。","關鍵詞":["覓心了不可得","安心竟"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"寺院","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"熊耳山","地依據":"其年十二月二十八日葬熊耳山。起塔於定林寺。","今地":null,"年":"十二月二十八日","人":[],"原文":"其年十二月二十八日葬熊耳山。起塔於定林寺。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"地類":"山"}]},{"序":2,"介面名":"慧可","各書異寫":["慧可（景德傳燈錄）","僧可（續高僧傳）","惠可（壇經敦煌本）"],"色":"#2f8b78","站":[{"地":"武牢","地依據":"第二十九祖慧可大師者武牢人也。姓姬氏。","今地":null,"年":null,"人":[],"原文":"第二十九祖慧可大師者武牢人也。姓姬氏。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"滎陽郡","地類":"州縣","座標":{"經度":113.3474,"緯度":34.78311,"查詢名":"滎陽郡","CHGIS編號":"hvd_116098","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_116098","年代範圍":"242 ~ 757"}},{"地":"洛陽龍門香山","地依據":"即抵洛陽龍門香山。依寶靜禪師出家受具。","今地":null,"年":null,"人":["寶靜禪師"],"原文":"即抵洛陽龍門香山。依寶靜禪師出家受具。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"山","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"香山","地依據":"年三十二却返香山。終日宴坐又經八載。","今地":null,"年":"年三十二","人":[],"原文":"年三十二却返香山。終日宴坐又經八載。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"山","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":"少室","地依據":"光受教造于少室。","今地":null,"年":null,"人":["達磨"],"原文":"光受教造于少室。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"洛州","地類":"山","座標":{"經度":112.59631,"緯度":34.73157,"查詢名":"洛陽縣","CHGIS編號":"hvd_82829","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82829","年代範圍":"265 ~ 604"}},{"地":null,"地依據":null,"今地":null,"年":"北齊天平二年","人":["居士（後名僧璨）"],"原文":"弟子身纏風恙。請和尚懺罪。師曰。將罪來與汝懺。居士良久云。覓罪不可得。師曰。我與汝懺罪竟。","關鍵詞":["將罪來與汝懺","覓罪不可得"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3}},{"地":null,"地依據":null,"今地":null,"年":null,"人":["僧璨"],"原文":"大師深器之。即為剃髮。云是吾寶也。宜名僧璨。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3}},{"地":"鄴都","地依據":"即於鄴都隨宜說法。一音演暢四眾歸依。如是積三十四載。","今地":null,"年":null,"人":[],"原文":"即於鄴都隨宜說法。一音演暢四眾歸依。如是積三十四載。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"相州","地類":"州縣"},{"地":"筦城縣匡救寺","地依據":"又於筦城縣匡救寺三門下。談無上道聽者林會。","今地":null,"年":null,"人":["辯和法師","翟仲侃"],"原文":"又於筦城縣匡救寺三門下。談無上道聽者林會。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"管城縣","地類":"寺院"},{"地":"筦城縣匡救寺","地依據":"又於筦城縣匡救寺三門下。談無上道聽者林會。","今地":null,"年":"隋開皇十三年三月十六日","人":[],"原文":"師怡然委順。識真者謂之償債。時年一百七歲。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"管城縣","地類":"寺院"}]},{"序":3,"介面名":"僧璨","各書異寫":[],"色":"#b8822c","站":[{"地":"舒州皖公山","地依據":"隱于舒州之皖公山。","今地":null,"年":null,"人":["慧可"],"原文":"隱于舒州之皖公山。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"舒州","地類":"山","座標":{"經度":116.90402,"緯度":30.53498,"查詢名":"舒州","CHGIS編號":"hvd_115802","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_115802","年代範圍":"582 ~ 606"}},{"地":"太湖縣司空山","地依據":"師往來太湖縣司空山。","今地":null,"年":"後周武帝破佛之後","人":[],"原文":"屬後周武帝破滅佛法。師往來太湖縣司空山。居無常處積十餘載。時人無能知者。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"太湖縣","地類":"山","座標":{"經度":116.26508,"緯度":30.42006,"查詢名":"太湖縣","CHGIS編號":"hvd_43008","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43008","年代範圍":"598 ~ 1911"}},{"地":null,"地依據":null,"今地":null,"年":"隋開皇十二年","人":["道信"],"原文":"願和尚慈悲乞與解脫法門。師曰。誰縛汝。曰無人縛。師曰。何更求解脫乎。","關鍵詞":["誰縛汝","無人縛"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3}},{"地":"羅浮山","地依據":"即適羅浮山優游二載。","今地":null,"年":null,"人":[],"原文":"即適羅浮山優游二載。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"地類":"山"},{"地":"山谷","地依據":"璨大師自羅浮歸山谷。得月餘方示滅。","今地":null,"年":"隋煬帝大業二年十月十五日","人":[],"原文":"於法會大樹下合掌立終。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"舒州","地類":"寺院","座標":{"經度":116.90402,"緯度":30.53498,"查詢名":"舒州","CHGIS編號":"hvd_115802","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_115802","年代範圍":"582 ~ 606"}}]},{"序":4,"介面名":"道信","各書異寫":[],"色":"#c05540","站":[{"地":"河內","地依據":"姓司馬氏世居河內。","今地":null,"年":null,"人":[],"原文":"第三十一祖道信大師者。姓司馬氏世居河內。後徙於蘄州之廣濟縣。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"河內郡","地類":"州縣","座標":{"經度":112.93699,"緯度":35.0893,"查詢名":"河內縣","CHGIS編號":"hvd_82488","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_82488","年代範圍":"596 ~ 1911"}},{"地":"吉州","地依據":"領徒眾抵吉州。","今地":null,"年":"隋大業十三載","人":[],"原文":"隋大業十三載。領徒眾抵吉州。值群盜圍城七旬不解。萬眾惶怖。師愍之教令念摩訶般若。","關鍵詞":["摩訶般若"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"吉州","地類":"州縣"},{"地":"蘄春破頭山","地依據":"師却返蘄春住破頭山。","今地":null,"年":"唐武德甲申歲","人":[],"原文":"唐武德甲申歲。師却返蘄春住破頭山。學侶雲臻。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"山"},{"地":"黃梅縣","地依據":"一日往黃梅縣路逢一小兒。","今地":null,"年":null,"人":["弘忍"],"原文":"師問曰。子何姓。答曰姓即有不是常姓。師曰。是何姓。答曰。是佛性。師曰。汝無性耶。答曰。性空故。","關鍵詞":["是佛性","性空故"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":null,"地依據":null,"今地":null,"年":"貞觀癸卯歲","人":["唐太宗"],"原文":"師乃引頸就刃神色儼然。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3}},{"地":null,"地依據":null,"今地":null,"年":"永徽辛亥歲閏九月四日","人":[],"原文":"一切諸法悉皆解脫。汝等各自護念流化未來。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3}}]},{"序":5,"介面名":"弘忍","各書異寫":[],"色":"#7a5f9e","站":[{"地":"蘄州黃梅","地依據":"第三十二祖弘忍大師者蘄州黃梅人也。","今地":null,"年":null,"人":[],"原文":"第三十二祖弘忍大師者蘄州黃梅人也。姓周氏。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"破頭山","地依據":"於破頭山咸亨中有一居士。姓盧名慧能。自新州來參謁師。","今地":null,"年":"咸亨中","人":["慧能"],"原文":"問曰。汝自何來曰嶺南師曰。欲須何事。曰唯求作佛。師曰。嶺南人無佛性。若為得佛。曰人即有南北佛性豈然。","關鍵詞":["唯求作佛","人即有南北","佛性豈然"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"山"},{"地":"碓坊","地依據":"於破頭山咸亨中有一居士。姓盧名慧能。自新州來參謁師。","今地":null,"年":null,"人":["慧能"],"原文":"便入碓坊服勞於杵臼之間。晝夜不息經八月。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"寺院"},{"地":"廊壁","地依據":"乃於廊壁書一偈云。","今地":null,"年":null,"人":["神秀"],"原文":"身是菩提樹 心如明鏡臺 時時勤拂拭 莫遣有塵埃","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"寺院"},{"地":"廊下","地依據":"能至夜密告一童子引至廊下。能自秉燭。令童子於秀偈之側寫一偈云。","今地":null,"年":null,"人":["慧能"],"原文":"菩提本非樹 心鏡亦非臺 本來無一物 何假拂塵埃","關鍵詞":["本來無一物"],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"寺院","異文提醒":"宗寶本 T2008 作「菩提本無樹　明鏡亦非臺　本來無一物　何處惹塵埃」，兩本並陳。"},{"地":"破頭山","地依據":"於破頭山咸亨中有一居士。姓盧名慧能。自新州來參謁師。","今地":null,"年":null,"人":["慧能"],"原文":"今以法寶及所傳袈裟用付於汝。善自保護無令斷絕。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州","地類":"山"},{"地":"黃梅東山","地依據":"建塔於黃梅之東山。","今地":null,"年":"上元二年","人":[],"原文":"即入室安坐而逝。壽七十有四。建塔於黃梅之東山。","關鍵詞":[],"出處":{"經號":"T2076","書名":"景德傳燈錄","卷":3},"行政地名":"蘄州黃梅縣","地類":"山","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}}]},{"序":6,"介面名":"惠能","各書異寫":["惠能（壇經兩本）","慧能（景德傳燈錄、宋高僧傳）"],"色":"#95683d","站":[{"地":"新州","地依據":"惠能嚴父，本貫范陽，左降流于嶺南，作新州百姓。","今地":null,"年":null,"人":["惠能","惠能嚴父","老母"],"原文":"惠能嚴父，本貫范陽，左降流于嶺南，作新州百姓。此身不幸，父又早亡。老母孤遺，移來南海，艱辛貧乏，於市賣柴。","關鍵詞":["本貫范陽","新州百姓","父又早亡","於市賣柴"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"新州","地類":"州縣","座標":{"經度":112.22508,"緯度":22.70292,"查詢名":"新州","CHGIS編號":"hvd_34107","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34107","年代範圍":"621 ~ 741"}},{"地":"蘄州黃梅縣東禪寺","地依據":"我從蘄州黃梅縣東禪寺來。","今地":null,"年":null,"人":["客","五祖忍大師","惠能"],"原文":"我從蘄州黃梅縣東禪寺來。其寺是五祖忍大師在彼主化，門人一千有餘","關鍵詞":["蘄州黃梅縣東禪寺","五祖忍大師","在彼主化","門人一千有餘"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"寺院","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"黃梅","地依據":"不經三十餘日，便至黃梅，禮拜五祖。","今地":null,"年":null,"人":["五祖","惠能"],"原文":"祖言：『汝是嶺南人，又是獵獠，若為堪作佛？』惠能曰：『人雖有南北，佛性本無南北；獵獠身與和尚不同，佛性有何差別？』","關鍵詞":["汝是嶺南人","若為堪作佛","人雖有南北","佛性本無南北"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"黃梅","地依據":"不經三十餘日，便至黃梅，禮拜五祖。","今地":null,"年":null,"人":["神秀"],"原文":"身是菩提樹，心如明鏡臺，時時勤拂拭，勿使惹塵埃。","關鍵詞":["身是菩提樹","心如明鏡臺","時時勤拂拭","勿使惹塵埃"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"黃梅","地依據":"不經三十餘日，便至黃梅，禮拜五祖。","今地":null,"年":null,"人":["惠能","張日用"],"原文":"菩提本無樹，明鏡亦非臺；本來無一物，何處惹塵埃？","關鍵詞":["菩提本無樹","明鏡亦非臺","本來無一物","何處惹塵埃"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"州縣","異文提醒":"敦煌本 T2007 作：菩提本無樹，\n明鏡亦無臺，\n佛性常清淨，\n何處有塵埃？","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"黃梅","地依據":"不經三十餘日，便至黃梅，禮拜五祖。","今地":null,"年":null,"人":["五祖","惠能"],"原文":"乃問曰：『米熟也未？』惠能曰：『米熟久矣，猶欠篩在。』祖以杖擊碓三下而去。","關鍵詞":["米熟也未","米熟久矣","猶欠篩在","擊碓三下"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"黃梅","地依據":"不經三十餘日，便至黃梅，禮拜五祖。","今地":null,"年":null,"人":["五祖","惠能"],"原文":"為說《金剛經》。至『應無所住而生其心』，惠能言下大悟，一切萬法，不離自性。","關鍵詞":["金剛經","應無所住而生其心","言下大悟","不離自性"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"蘄州黃梅縣","地類":"州縣","座標":{"經度":115.85098,"緯度":30.10005,"查詢名":"黃梅縣","CHGIS編號":"hvd_43557","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_43557","年代範圍":"598 ~ 1236"}},{"地":"九江驛","地依據":"祖相送，直至九江驛。","今地":null,"年":null,"人":["五祖","惠能"],"原文":"祖令上船，五祖把艣自搖。惠能言：『請和尚坐。弟子合搖艣。』祖云：『合是吾渡汝。』","關鍵詞":["祖令上船","把艣自搖","弟子合搖艣","合是吾渡汝"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"江州","地類":"泛稱","座標":{"經度":115.98568,"緯度":29.72236,"查詢名":"江州","CHGIS編號":"hvd_111011","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_111011","年代範圍":"621 ~ 741"}},{"地":"大庾嶺","地依據":"兩月中間，至大庾嶺。","今地":null,"年":null,"人":["惠能","惠明"],"原文":"惠能云：『不思善，不思惡，正與麼時，那箇是明上座本來面目？』惠明言下大悟。","關鍵詞":["不思善","不思惡","正與麼時","本來面目"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"虔州","地類":"山","座標":{"經度":114.93248,"緯度":25.847,"查詢名":"虔州","CHGIS編號":"hvd_32562","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_32562","年代範圍":"622 ~ 741"}},{"地":"韶州曹侯村","地依據":"師自黃梅得法，回至韶州曹侯村，人無知者。","今地":null,"年":null,"人":["惠能","無盡藏","劉志略"],"原文":"尼乃執卷問字，師曰：「字即不識，義即請問。」尼曰：「字尚不識，焉能會義？」師曰：「諸佛妙理，非關文字。」","關鍵詞":["執卷問字","字即不識","義即請問","諸佛妙理","非關文字"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"韶州","地類":"州縣","座標":{"經度":113.60342,"緯度":24.81021,"查詢名":"韶州","CHGIS編號":"hvd_34079","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34079","年代範圍":"627 ~ 741"}},{"地":"四會","地依據":"乃於四會，避難獵人隊中，凡經一十五載，時與獵人隨宜說法。","今地":null,"年":null,"人":["惠能","獵人"],"原文":"乃於四會，避難獵人隊中，凡經一十五載，時與獵人隨宜說法。獵人常令守網，每見生命，盡放之。每至飯時，以菜寄煮肉鍋。或問，則對曰：『但喫肉邊菜。』","關鍵詞":["四會","避難獵人隊中","一十五載","常令守網","但喫肉邊菜"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"廣州四會縣","地類":"州縣","座標":{"經度":112.69453,"緯度":23.34871,"查詢名":"四會縣","CHGIS編號":"hvd_42269","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_42269","年代範圍":"-214 ~ 971"}},{"地":"廣州法性寺","地依據":"遂出至廣州法性寺，值印宗法師講《涅槃經》。","今地":null,"年":null,"人":["惠能","印宗法師","二僧"],"原文":"惠能進曰：『不是風動，不是旛動，仁者心動。』一眾駭然。","關鍵詞":["不是風動","不是旛動","仁者心動","一眾駭然"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"廣州","地類":"寺院","座標":{"經度":113.25607,"緯度":23.13462,"查詢名":"廣州","CHGIS編號":"hvd_110906","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_110906","年代範圍":"621 ~ 741"}},{"地":"大梵寺","地依據":"韶州韋刺史與官僚入山請師，出於城中大梵寺講堂，為眾開緣說法。","今地":null,"年":null,"人":["惠能","韋刺史","官僚"],"原文":"時，大師至寶林。韶州韋刺史與官僚入山請師，出於城中大梵寺講堂，為眾開緣說法。","關鍵詞":["大師至寶林","韶州韋刺史","大梵寺講堂","開緣說法"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"韶州","地類":"寺院","座標":{"經度":113.60342,"緯度":24.81021,"查詢名":"韶州","CHGIS編號":"hvd_34079","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34079","年代範圍":"627 ~ 741"}},{"地":"國恩寺","地依據":"師於太極元年壬子，延和七月命門人往新州國恩寺建塔","今地":null,"年":"先天二年癸丑歲八月初三日","人":["惠能","法海","諸徒眾"],"原文":"大師，先天二年癸丑歲八月初三日，於國恩寺齋罷，謂諸徒眾曰：「汝等各依位坐，吾與汝別。」","關鍵詞":["先天二年","癸丑歲","八月初三日","國恩寺","吾與汝別"],"出處":{"經號":"T2008","書名":"六祖大師法寶壇經","卷":1},"行政地名":"新州","地類":"寺院","座標":{"經度":112.22508,"緯度":22.70292,"查詢名":"新州","CHGIS編號":"hvd_34107","CHGIS網址":"https://chgis.hudci.org/tgaz/placename/hvd_34107","年代範圍":"621 ~ 741"}}]}],"座標來源":"哈佛・復旦 中國歷史地理資訊系統（CHGIS）TGAZ，查詢帶該祖師在世年份。座標為該行政地名的治所點，不是寺院精確位置。"};
+let mi = 0, mode = "map", step = 0, cur = -1;
+
+const el = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+/* 有 CHGIS 座標的就用真實經緯度擺位；整組都沒座標才退回示意排列 */
+function geoLayout(nodes){
+  const g = nodes.map(n => (n.事 ? (n.事.find(e=>e.座標)||{}).座標 : n.座標) || null);
+  if(!g.some(Boolean)) return null;
+  const xs = g.filter(Boolean).map(c=>c.經度), ys = g.filter(Boolean).map(c=>c.緯度);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys);
+  if(x1-x0 < 1.5){ const m=(x0+x1)/2; x0=m-0.75; x1=m+0.75; }
+  if(y1-y0 < 1.5){ const m=(y0+y1)/2; y0=m-0.75; y1=m+0.75; }
+  const out = g.map(c => c ? {
+    x: 14 + (c.經度 - x0)/(x1-x0) * 72,
+    y: 82 - (c.緯度 - y0)/(y1-y0) * 64,   // 緯度越高越靠上
+    geo: true,
+  } : null);
+  // 同一個治所座標會有好幾個地點（少林寺、香山、洛陽都歸洛陽縣），
+  // 疊在一起就看不到字，依固定角度散開一小圈。散開只是為了看得清楚，
+  // 座標本身仍是該行政地名的治所點，頁尾已註明。
+  const 群 = {};
+  out.forEach((p,i)=>{ if(p){ const k=p.x.toFixed(1)+","+p.y.toFixed(1); (群[k]=群[k]||[]).push(i); } });
+  Object.values(群).forEach(ids=>{
+    if(ids.length<2) return;
+    const r = 5.5 + ids.length*0.6;
+    ids.forEach((i,k)=>{
+      const a = (Math.PI*2*k)/ids.length - Math.PI/2;
+      out[i].x += Math.cos(a)*r;
+      out[i].y += Math.sin(a)*r*0.72;
+      out[i].群 = true;
+    });
+  });
+  return out;
+}
+
+/* 行腳示意位置：依站序蛇行排列，不是地理座標 */
+function layout(n){
+  const pts = [], cols = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(n))));
+  const rows = Math.ceil(n/cols);
+  for(let i=0;i<n;i++){
+    const r = Math.floor(i/cols), c0 = i%cols;
+    const c = (r%2===0) ? c0 : (cols-1-c0);
+    pts.push({
+      x: 14 + c*(72/Math.max(1,cols-1)),
+      y: 16 + r*(68/Math.max(1,rows-1||1))
+    });
+  }
+  return pts;
+}
+
+function renderMasters(){
+  el("masters").innerHTML = DATA.祖師.map((p,i)=>{
+    const has = (p.站||[]).length>0;
+    return '<div class="m'+(i===mi&&has?' on':'')+(has?'':' todo')+'" data-i="'+i+'" style="--mc:'+p.色+'">'
+      + '<div class="face">'+(has?'畫像':'建置中')+'</div>'
+      + '<b>'+esc(p.介面名)+'</b><s>'+(has?(p.站.length+' 站'):'尚未建站')+'</s></div>';
+  }).join("");
+}
+
+function stations(){ return DATA.祖師[mi].站 || []; }
+
+/* 地圖上一個地方＝一個點，同一地發生的事全部收在那個點底下。
+   生平模式才是一站一站照順序走。 */
+function places(){
+  const out = [], idx = {};
+  stations().forEach((s,i)=>{
+    const key = s.地 || "（原典未載地點）";
+    if(idx[key]===undefined){ idx[key]=out.length; out.push({地:key, 事:[]}); }
+    out[idx[key]].事.push(Object.assign({序:i+1}, s));
+  });
+  return out;
+}
+
+function renderMap(){
+  const p = DATA.祖師[mi];
+  document.documentElement.style.setProperty("--c", p.色);
+  const nodes = (mode==="map") ? places() : stations();
+  const geo = geoLayout(nodes);
+  const fallback = layout(nodes.length);
+  const pts = nodes.map((_,i)=> (geo && geo[i]) ? geo[i] : null);
+  // 沒有座標的排在底部一條，明寫尚未定位
+  let k = 0;
+  const 未定位 = pts.filter(p=>!p).length;
+  nodes.forEach((_,i)=>{ if(!pts[i]){
+    pts[i] = { x: 10 + (k*(80/Math.max(1,未定位-1||1))), y: 93, geo:false }; k++;
+  }});
+  el("mapNote").textContent = geo
+    ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，虛線框的地名尚未定位。"
+              : "圓點是歷史地理系統定位的真實位置。")
+    : "這一位的地點尚未定位，圓點為示意排列。";
+  const box = el("mapbox");
+  box.querySelectorAll(".spot").forEach(n=>n.remove());
+  nodes.forEach((s,i)=>{
+    const b = document.createElement("button");
+    b.className = "spot" + (pts[i].geo ? "" : " nogeo");
+    b.style.left = pts[i].x+"%"; b.style.top = pts[i].y+"%";
+    b.dataset.i = i;
+    const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
+    const badge = (mode==="map" && s.事.length>1)
+      ? '<em style="font-style:normal; font-size:13.5px; color:var(--ink2)">　'+s.事.length+' 件</em>' : "";
+    b.innerHTML = '<i></i><b>'+esc(label)+badge+'</b>';
+    box.appendChild(b);
+  });
+  // 連線
+  const gp = pts.filter(q=>q.geo);
+  const d = gp.map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" ");
+  el("paths").innerHTML = '<path d="'+d+'" fill="none" stroke="'+p.色
+    + '" stroke-opacity=".22" stroke-width=".6" vector-effect="non-scaling-stroke"/>';
+  el("paths").setAttribute("viewBox","0 0 100 100");
+  el("paths").setAttribute("preserveAspectRatio","none");
+  el("chips").innerHTML = nodes.map((s,i)=>{
+    const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
+    const n = (mode==="map" && s.事.length>1) ? '<span class="n">'+s.事.length+' 件</span>' : "";
+    return '<button class="chip'+(pts[i].geo?"":" nogeo")+'" data-i="'+i+'">'
+      + esc(label) + n + '</button>';
+  }).join("");
+  paintSpots();
+  renderSources();
+}
+
+/* 標籤避讓：撞到就把字翻到點的上方，再撞就往下拉開。
+   只動標籤的排版，圓點位置（也就是座標）完全不動。 */
+function decollide(){
+  const sp = [...document.querySelectorAll(".spot")];
+  sp.forEach(b=>b.classList.remove("up","far"));
+  const box = () => sp.map(b=>b.getBoundingClientRect());
+  const modes = ["up", "lft", "rgt"];
+  for(let pass=0; pass<3; pass++){
+    const r = box();
+    for(let i=0;i<sp.length;i++){
+      for(let j=i+1;j<sp.length;j++){
+        const a=r[i], c=r[j];
+        const hit = !(a.right < c.left || c.right < a.left ||
+                      a.bottom < c.top || c.bottom < a.top);
+        if(hit){
+          const t = sp[j];
+          if(!modes.some(m=>t.classList.contains(m))) t.classList.add(modes[pass % 3]);
+          else { t.classList.remove("up","lft","rgt"); t.classList.add(modes[(pass+1) % 3]); }
+        }
+      }
+    }
+  }
+}
+
+function paintSpots(){
+  document.querySelectorAll(".chip").forEach((c,i)=>{
+    const on = (mode==="map") ? (i===cur) : (i<step);
+    c.classList.toggle("on", on);
+    c.disabled = (mode!=="map" && i!==step);
+  });
+  document.querySelectorAll(".spot").forEach((b,i)=>{
+    b.className = "spot";
+    if(mode==="map"){
+      if(i===cur) b.classList.add("lit","cur");
+    } else {
+      if(i<step) b.classList.add("lit");
+      else if(i===step) b.classList.add("next");
+      else b.classList.add("dim");
+      if(i===step-1) b.classList.add("cur");
+    }
+  });
+}
+
+function stationHtml(s, head){
+  const kws = (s.關鍵詞||[]).map(k=>'<span class="kw">'+esc(k)+'</span>').join("");
+  return '<h3>'+head+'</h3>'
+    + '<table class="facts">'
+    + '<tr><th>地點</th><td>'+esc(s.地 || "原典未載")+'</td></tr>'
+    + '<tr><th>今日</th><td>'+(s.今地 ? esc(s.今地) : "待定位") +'</td></tr>'
+    + '<tr><th>年代</th><td>'+esc(s.年 || "原典未載")+'</td></tr>'
+    + '<tr><th>遇到的人</th><td>'+((s.人&&s.人.length)?s.人.map(esc).join("、"):"—")+'</td></tr>'
+    + '<tr><th>出處</th><td>'+esc(s.出處.書名)+'　卷'+s.出處.卷+'</td></tr>'
+    + '</table>'
+    + '<div class="quote">'+esc(s.原文)+'</div>'
+    + '<div class="src">'+esc(s.出處.書名)+'　卷'+s.出處.卷+'　'+esc(s.出處.經號)+'</div>'
+    + (kws ? '<div class="kws">'+kws+'</div>' : "")
+    + (s.異文提醒 ? '<div class="variant">異文　'+esc(s.異文提醒)+'</div>' : "");
+}
+
+function renderPanel(){
+  const p = DATA.祖師[mi], st = stations();
+  if(mode==="map"){
+    if(cur<0){ el("panel").innerHTML = '<p class="hint">點左邊任何一個地方</p>'; el("prog").textContent=""; return; }
+    const pl = places()[cur];
+    el("panel").innerHTML = '<h3>'+esc(pl.地)+'</h3>'
+      + '<table class="facts"><tr><th>今日</th><td>待定位</td></tr>'
+      + '<tr><th>在這裡</th><td>' + pl.事.length + ' 件事</td></tr></table>'
+      + pl.事.map(ev=>'<div style="margin:0 0 26px">'
+          + '<table class="facts">'
+          + '<tr><th>年代</th><td>'+esc(ev.年 || "原典未載")+'</td></tr>'
+          + '<tr><th>遇到的人</th><td>'+((ev.人&&ev.人.length)?ev.人.map(esc).join("、"):"—")+'</td></tr>'
+          + '</table>'
+          + '<div class="quote">'+esc(ev.原文)+'</div>'
+          + '<div class="src">'+esc(ev.出處.書名)+'　卷'+ev.出處.卷+'　'+esc(ev.出處.經號)+'</div>'
+          + ((ev.關鍵詞||[]).length
+              ? '<div class="kws">'+ev.關鍵詞.map(k=>'<span class="kw">'+esc(k)+'</span>').join("")+'</div>' : "")
+          + (ev.異文提醒 ? '<div class="variant">異文　'+esc(ev.異文提醒)+'</div>' : "")
+          + '</div>').join("");
+    el("prog").textContent = "";
+    return;
+  }
+  if(step===0){
+    el("panel").innerHTML = '<h3>'+esc(p.介面名)+'</h3>'
+      + (p.各書異寫 && p.各書異寫.length
+          ? '<table class="facts"><tr><th>各書異寫</th><td>'+p.各書異寫.map(esc).join("<br>")+'</td></tr></table>'
+          : "")
+      + '<p class="hint" style="margin-top:40px">點左邊那盞會跳的燈，從第一站開始</p>';
+  } else if(step>st.length){
+    const nx = DATA.祖師[mi+1];
+    el("panel").innerHTML = '<h3>'+esc(p.介面名)+'　走完了</h3>'
+      + '<p style="color:var(--ink2); font-size:17px">一共 '+st.length+' 站，全部點亮。</p>'
+      + (nx ? '<button class="nextbtn" onclick="gotoMaster('+(mi+1)+')">接著認識　'
+              + esc(nx.介面名) + ((nx.站&&nx.站.length)?'':'（建置中）') + '</button>' : "");
+  } else {
+    el("panel").innerHTML = stationHtml(st[step-1], "第 "+step+" 站　"+esc(st[step-1].地 || "（原典未載地點）"));
+  }
+  el("prog").textContent = "已點亮 " + Math.min(step, st.length) + " ／ " + st.length;
+}
+
+function renderSources(){
+  const seen = {}, st = stations();
+  st.forEach(s=>{ seen[s.出處.書名+"　卷"+s.出處.卷+"（"+s.出處.經號+"）"]=1; });
+  el("srcUl").innerHTML = Object.keys(seen).map(k=>'<li>'+esc(k)+'</li>').join("");
+}
+
+function gotoMaster(i){
+  if(!(DATA.祖師[i].站||[]).length) return;
+  mi = i; step = 0; cur = -1;
+  renderMasters(); renderMap(); renderPanel();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+el("masters").addEventListener("click", e=>{
+  const m = e.target.closest(".m"); if(!m || m.classList.contains("todo")) return;
+  gotoMaster(+m.dataset.i);
+});
+function pick(i){
+  if(mode==="map"){ cur = i; }
+  else { if(i!==step) return; step++; }
+  paintSpots(); renderPanel();
+}
+el("mapbox").addEventListener("click", e=>{
+  const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
+});
+el("chips").addEventListener("click", e=>{
+  const c = e.target.closest(".chip"); if(c && !c.disabled) pick(+c.dataset.i);
+});
+function setMode(m){
+  mode = m; step = 0; cur = -1;
+  el("bMap").classList.toggle("on", m==="map");
+  el("bLife").classList.toggle("on", m==="life");
+  el("modeNote").textContent = (m==="map")
+    ? "點到哪裡，那裡就亮，右邊出現他在那裡說過的話、遇到的人。"
+    : "跳動的那盞燈是下一站。一盞一盞點亮，走完他的一生。";
+  renderMap(); renderPanel();
+}
+el("bMap").onclick = ()=>setMode("map");
+el("bLife").onclick = ()=>setMode("life");
+
+renderMasters(); renderMap(); setMode("map");
+</script>
