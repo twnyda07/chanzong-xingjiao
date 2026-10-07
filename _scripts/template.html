@@ -89,6 +89,27 @@
   .nextbtn{display:block; margin:18px auto 0; font-family:inherit; font-size:19px;
     padding:12px 34px; border-radius:999px; border:1px solid var(--c);
     background:var(--c); color:#fff; cursor:pointer;}
+  /* ── 同字發光 ── */
+  .charbar{margin:0 0 22px; padding:18px 20px; background:#f7f5f1;
+    border:1px solid var(--rule); border-radius:8px;}
+  .cbhead{font-size:16.5px; color:var(--ink2); margin-bottom:12px;}
+  .cbhead s{text-decoration:none; font-size:14px; color:#a9a194;}
+  .chars{display:flex; flex-wrap:wrap; gap:7px;}
+  .ch{font-family:inherit; cursor:pointer; background:#fff; border:1px solid var(--rule);
+    border-radius:6px; padding:7px 11px 6px; line-height:1.25; min-width:50px;}
+  .ch b{display:block; font-size:23px; font-weight:normal;}
+  .ch s{display:block; text-decoration:none; font-size:12.5px; color:#a9a194;}
+  .ch.on{background:#f3d98a; border-color:#d8b445;}
+  .ch.on s{color:#8a6f3c;}
+  .dist{display:none; margin-top:16px; padding-top:14px; border-top:1px solid var(--rule);}
+  .dist.show{display:block;}
+  .dist .row{display:grid; grid-template-columns:4.5em 1fr 3em; gap:12px;
+    align-items:center; margin-bottom:7px; font-size:16px;}
+  .dist .bar{height:14px; border-radius:7px; background:#e6e1d8; overflow:hidden;}
+  .dist .bar i{display:block; height:100%; border-radius:7px;}
+  .dist .cnt{text-align:right; color:var(--ink2); font-size:15px;}
+  mark{background:#f3d98a; color:inherit; border-radius:3px; padding:0 1px;}
+
   /* ── 七面向檔案 ── */
   #profile{margin-top:40px;}
   .pf h2{font-size:27px; margin:0 0 4px; font-weight:normal; letter-spacing:2px;}
@@ -134,6 +155,12 @@
 </div>
 <p class="note" id="modeNote"></p>
 <p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
+
+<div class="charbar">
+  <div class="cbhead">點一個字，看它在誰的原典裡出現　<s>依出現次數排序，不經挑選</s></div>
+  <div class="chars" id="chars"></div>
+  <div class="dist" id="dist"></div>
+</div>
 
 <div class="stage">
   <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
@@ -277,6 +304,7 @@ function renderMap(){
   paintSpots();
   renderSources();
   renderProfile();
+  paintChar();
 }
 
 /* 標籤避讓：撞到就把字翻到點的上方，再撞就往下拉開。
@@ -380,6 +408,78 @@ function renderPanel(){
 
 const 節序 = ["生平", "參學歷程", "開悟因緣", "教學風格", "歷史定位", "交集人物"];
 
+/* ── 同字發光：字從原典裡數出來，不是我挑的 ── */
+let 選字 = null;
+const 停 = new Set("之也曰於而以者乎矣焉哉所其不我汝為是有一二三十日月年云問答言師大小上下中出入在到來去此彼時即乃又復則與及等何如若可得見知".split(""));
+function 數字(){
+  const total = {}, per = {};
+  DATA.祖師.forEach(p=>{
+    per[p.介面名] = {};
+    const add = t => { for(const c of (t||"")){
+      if(c >= "一" && c <= "鿿" && !停.has(c)){
+        total[c] = (total[c]||0)+1; per[p.介面名][c] = (per[p.介面名][c]||0)+1; }
+    }};
+    (p.站||[]).forEach(s=>add(s.原文));
+    const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
+    if(f) 節序.forEach(k => (f[k]||[]).forEach(e => add(e.原文)));
+  });
+  return { total, per };
+}
+const 字表 = 數字();
+
+function renderChars(){
+  const top = Object.entries(字表.total).sort((a,b)=>b[1]-a[1]).slice(0,24);
+  el("chars").innerHTML = top.map(([c,n])=>
+    '<button class="ch' + (選字===c?" on":"") + '" data-c="' + esc(c) + '">'
+    + '<b>' + esc(c) + '</b><s>' + n + '</s></button>').join("");
+}
+
+function renderDist(){
+  const d = el("dist");
+  if(!選字){ d.className = "dist"; d.innerHTML = ""; return; }
+  const names = DATA.祖師.map(p=>p.介面名);
+  const vals = names.map(n => (字表.per[n]||{})[選字] || 0);
+  const max = Math.max(1, ...vals);
+  d.className = "dist show";
+  d.innerHTML = '<div style="font-size:16px; margin-bottom:10px">「'
+    + esc(選字) + '」字出現的次數</div>'
+    + names.map((n,i)=>
+      '<div class="row"><span>' + esc(n) + '</span>'
+      + '<span class="bar"><i style="width:' + (vals[i]/max*100) + '%; background:'
+      + DATA.祖師[i].色 + '"></i></span>'
+      + '<span class="cnt">' + vals[i] + '</span></div>').join("");
+}
+
+/* 只動顯示，不動資料：在已渲染的引文裡把選中的字包起來 */
+function paintChar(){
+  const sel = ".quote, .ent .q, .ppl .q2, .panel .qt2";
+  document.querySelectorAll(sel).forEach(box=>{
+    box.querySelectorAll("mark").forEach(m=>{
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+    box.normalize();
+    if(!選字) return;
+    const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    const hits = [];
+    while(walk.nextNode()) if(walk.currentNode.nodeValue.includes(選字)) hits.push(walk.currentNode);
+    hits.forEach(node=>{
+      const parts = node.nodeValue.split(選字);
+      const frag = document.createDocumentFragment();
+      parts.forEach((t,i)=>{
+        if(i){ const m = document.createElement("mark"); m.textContent = 選字; frag.appendChild(m); }
+        if(t) frag.appendChild(document.createTextNode(t));
+      });
+      node.replaceWith(frag);
+    });
+  });
+}
+
+el("chars").addEventListener("click", e=>{
+  const b = e.target.closest(".ch"); if(!b) return;
+  選字 = (選字 === b.dataset.c) ? null : b.dataset.c;
+  renderChars(); renderDist(); paintChar();
+});
+
 function renderProfile(){
   const p = DATA.祖師[mi];
   const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
@@ -453,5 +553,5 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");
 el("bLife").onclick = ()=>setMode("life");
 
-renderMasters(); renderMap(); setMode("map");
+renderMasters(); renderChars(); renderMap(); setMode("map");
 </script>
