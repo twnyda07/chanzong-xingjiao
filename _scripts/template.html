@@ -20,7 +20,17 @@
      background:#fff; text-align:center; cursor:pointer; transition:.3s;}
   .m .face{width:68px; height:82px; margin:0 auto 9px; border-radius:36px 36px 30px 30px;
      background:linear-gradient(180deg,#efebe3,#e3ded4); display:flex; align-items:center;
-     justify-content:center; color:#b3aa9c; font-size:14px; transition:.4s;}
+     justify-content:center; color:#b3aa9c; font-size:13px; transition:.4s; overflow:hidden;}
+  .m .face.pic{background:#efece5;}
+  .m .face.pic img{width:100%; height:100%; object-fit:cover; object-position:50% 42%;
+     filter:saturate(.9);}
+  .m.on .face.pic img{filter:none;}
+  /* 祖師頁的大圖 */
+  .pf .portrait{float:right; width:190px; margin:0 0 16px 22px;}
+  .pf .portrait img{width:100%; border:1px solid var(--rule); border-radius:4px; display:block;}
+  .pf .portrait figcaption{font-size:13.5px; color:var(--ink2); line-height:1.7; margin-top:7px;}
+  .pf .portrait a{color:var(--accent);}
+  @media (max-width:700px){ .pf .portrait{float:none; width:100%; margin:0 0 16px;} }
   .m b{font-size:22px; font-weight:normal; display:block;}
   .m s{font-size:14px; color:var(--ink2); text-decoration:none; display:block; margin-top:2px;}
   .m.on{border-color:transparent; box-shadow:0 0 0 2px var(--mc) inset; transform:translateY(-3px);}
@@ -150,6 +160,14 @@
   .dist .bar i{display:block; height:100%; border-radius:7px;}
   .dist .cnt{text-align:right; color:var(--ink2); font-size:15px;}
   mark{background:#f3d98a; color:inherit; border-radius:3px; padding:0 1px;}
+  .hits{margin-top:16px;}
+  .hits .hgrp{margin-bottom:16px;}
+  .hits .hnm{font-size:17px; margin-bottom:7px;}
+  .hits .hq{background:#fff; border:1px solid var(--rule); border-radius:5px;
+    padding:12px 15px; margin-bottom:7px; font-size:17.5px; line-height:1.95;}
+  .hits .hq s{display:block; text-decoration:none; font-size:13.5px;
+    color:var(--ink2); margin-top:6px;}
+  .hits .more{font-size:14.5px; color:#a9a194;}
 
   /* ── 七面向檔案 ── */
   #profile{margin-top:40px;}
@@ -200,8 +218,13 @@
 <div class="lifelines">
   <div class="cbhead">六條生命線　<s>橫軸是西元年。圓點是原典記有年號的事件，點它看原文。</s></div>
   <div id="lines"></div>
-  <p class="lnote">實心段＝原典記有年號的事件之間。原典只寫「十月一日」「年三十二」這種沒有年份的，
-    不放上線。西元是為了排位置換算的，<b>不是原典的字</b>，網站顯示的一律是原典字樣。</p>
+  <p class="lnote"><b>惠能那條特別長</b>，因為最後一點是示寂一百年後朝廷追賜諡號，原典也記了年號。<br>
+    <b>為什麼有人只有兩點、有人五點？</b>
+    一個點＝原典記有年號的一個年份。達摩只有兩點，不是他的事少，是
+    <b>原典替他記下年號的地方只有兩處</b>；道信五點，因為史傳替他記了較多年份。
+    點的多寡反映的是史料留下多少，不是祖師的重要性。<br>
+    原典只寫「十月一日」「年三十二」這種沒有年份的，不放上線。
+    西元是為了排位置換算的，<b>不是原典的字</b>，畫面顯示的一律是原典字樣。</p>
   <div class="lpanel" id="lpanel"></div>
 </div>
 
@@ -209,6 +232,7 @@
   <div class="cbhead">點一個字，看它在誰的原典裡出現　<s>依出現次數排序，不經挑選</s></div>
   <div class="chars" id="chars"></div>
   <div class="dist" id="dist"></div>
+  <div class="hits" id="hits"></div>
 </div>
 
 <div class="stage">
@@ -233,6 +257,7 @@
 const DATA = /*__DATA__*/null;
 const PROFILES = /*__PROFILES__*/null;
 const ERAS = /*__ERAS__*/null;
+const PICS = /*__PICS__*/null;
 let mi = 0, mode = "map", step = 0, cur = -1;
 
 const el = id => document.getElementById(id);
@@ -285,11 +310,17 @@ function layout(n){
   return pts;
 }
 
+function 臉(名, has){
+  const k = PICS ? Object.keys(PICS).find(k => PICS[k].祖師 === 名) : null;
+  if(k) return '<div class="face pic"><img src="畫像/'+k+'.jpg" alt=""></div>';
+  return '<div class="face">'+(has ? '無畫像' : '建置中')+'</div>';
+}
+
 function renderMasters(){
   el("masters").innerHTML = DATA.祖師.map((p,i)=>{
     const has = (p.站||[]).length>0;
     return '<div class="m'+(i===mi&&has?' on':'')+(has?'':' todo')+'" data-i="'+i+'" style="--mc:'+p.色+'">'
-      + '<div class="face">'+(has?'畫像':'建置中')+'</div>'
+      + 臉(p.介面名, has)
       + '<b>'+esc(p.介面名)+'</b><s>'+(has?(p.站.length+' 站'):'尚未建站')+'</s></div>';
   }).join("");
 }
@@ -497,7 +528,7 @@ function 事件表(){
 }
 
 const 事件 = 事件表();
-const Y0 = 500, Y1 = 730;
+const Y0 = 505, Y1 = 835;
 const pos = y => ((y - Y0) / (Y1 - Y0)) * 100;
 
 function renderLines(){
@@ -524,7 +555,7 @@ function renderLines(){
       + '</span></div>';
   });
   let ticks = "";
-  for(let y=500; y<=700; y+=50) ticks += '<span style="left:'+pos(y)+'%">'+y+'</span>';
+  for(let y=550; y<=800; y+=50) ticks += '<span style="left:'+pos(y)+'%">'+y+'</span>';
   h += '<div class="laxis"><span></span><div class="ticks">'+ticks+'</div></div>';
   el("lines").innerHTML = h;
 }
@@ -569,6 +600,41 @@ function renderChars(){
     + '<b>' + esc(c) + '</b><s>' + n + '</s></button>').join("");
 }
 
+/* 只給次數不給原文，那個數字是沒有意義的——點了字就要看得到它出現在哪些句子 */
+function allQuotes(){
+  const out = [];
+  DATA.祖師.forEach((p,pi)=>{
+    (p.站||[]).forEach(s=>out.push({pi, 名:p.介面名, 色:p.色, 原文:s.原文, 出處:s.出處}));
+    const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
+    if(f) 節序.forEach(k => (f[k]||[]).forEach(e =>
+      out.push({pi, 名:p.介面名, 色:p.色, 原文:e.原文, 出處:e.出處})));
+  });
+  return out;
+}
+const 全部引文 = allQuotes();
+
+function renderHits(){
+  const box = el("hits");
+  if(!選字){ box.innerHTML = ""; return; }
+  const 命中 = 全部引文.filter(q => q.原文.includes(選字));
+  let h = '<div style="font-size:15.5px; color:var(--ink2); margin-bottom:12px">'
+    + '「' + esc(選字) + '」出現在這些原文裡（共 ' + 命中.length + ' 段）</div>';
+  DATA.祖師.forEach((p,pi)=>{
+    const rows = 命中.filter(q=>q.pi===pi);
+    if(!rows.length) return;
+    const show = rows.slice(0, 4);
+    h += '<div class="hgrp"><div class="hnm" style="color:'+p.色+'">'
+      + esc(p.介面名) + '　' + rows.length + ' 段</div>'
+      + show.map(q=>'<div class="hq">' + esc(q.原文)
+          + '<s>' + esc(q.出處.書名) + '　卷' + q.出處.卷 + '　' + esc(q.出處.經號) + '</s></div>').join("")
+      + (rows.length > show.length
+          ? '<div class="more">另有 ' + (rows.length-show.length) + ' 段，在下面各區塊中以黃底標出</div>' : "")
+      + '</div>';
+  });
+  box.innerHTML = h;
+  paintChar();
+}
+
 function renderDist(){
   const d = el("dist");
   if(!選字){ d.className = "dist"; d.innerHTML = ""; return; }
@@ -587,7 +653,7 @@ function renderDist(){
 
 /* 只動顯示，不動資料：在已渲染的引文裡把選中的字包起來 */
 function paintChar(){
-  const sel = ".quote, .ent .q, .ppl .q2, .panel .qt2";
+  const sel = ".quote, .ent .q, .ppl .q2, .panel .qt2, .hits .hq, .lpanel .q3";
   document.querySelectorAll(sel).forEach(box=>{
     box.querySelectorAll("mark").forEach(m=>{
       m.replaceWith(document.createTextNode(m.textContent));
@@ -612,14 +678,24 @@ function paintChar(){
 el("chars").addEventListener("click", e=>{
   const b = e.target.closest(".ch"); if(!b) return;
   選字 = (選字 === b.dataset.c) ? null : b.dataset.c;
-  renderChars(); renderDist(); paintChar();
+  renderChars(); renderDist(); renderHits(); paintChar();
 });
 
 function renderProfile(){
   const p = DATA.祖師[mi];
   const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
   if(!f){ el("profile").innerHTML = ""; return; }
-  let h = '<div class="pf"><h2>' + esc(p.介面名) + '</h2>';
+  let h = '<div class="pf">';
+  const pk = PICS ? Object.keys(PICS).find(k => PICS[k].祖師 === p.介面名) : null;
+  if(pk){
+    const m = PICS[pk];
+    h += '<figure class="portrait"><img src="畫像/'+pk+'.jpg" alt="">'
+      + '<figcaption>' + esc(m.說明) + '<br>' + esc(m.標題) + '<br>'
+      + esc(m.館藏) + (m.年代 ? '　' + esc(m.年代) : '') + '<br>'
+      + esc(m.授權) + '　<a href="' + esc(m.詳目網址) + '" target="_blank" rel="noopener">館藏詳目</a>'
+      + '</figcaption></figure>';
+  }
+  h += '<h2>' + esc(p.介面名) + '</h2>';
   if(p.各書異寫 && p.各書異寫.length)
     h += '<p class="alias">各書異寫　' + p.各書異寫.map(esc).join("　") + '</p>';
   for(const k of 節序){
