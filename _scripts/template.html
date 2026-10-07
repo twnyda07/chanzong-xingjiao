@@ -307,7 +307,7 @@ function layout(n){
 }
 
 function 臉(名, has){
-  const k = PICS ? Object.keys(PICS).find(k => PICS[k].祖師 === 名) : null;
+  const k = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === 名) : null;
   if(k) return '<div class="face pic"><img src="畫像/'+k+'.jpg" alt=""></div>';
   return '<div class="face">'+(has ? '無畫像' : '建置中')+'</div>';
 }
@@ -519,7 +519,7 @@ function stationHtml(s, head){
   return '<h3>'+head+'</h3>'
     + '<table class="facts">'
     + '<tr><th>地點</th><td>'+esc(s.地 || "原典未載")+'</td></tr>'
-    + '<tr><th>今日</th><td>'+(s.今地 ? esc(s.今地) : "待定位") +'</td></tr>'
+    + '<tr><th>今日</th><td>'+(s.今地 ? esc(s.今地) : "原典地名尚未定位") +'</td></tr>'
     + '<tr><th>年代</th><td>'+esc(s.年 || "原典未載")+'</td></tr>'
     + '<tr><th>遇到的人</th><td>'+((s.人&&s.人.length)?s.人.map(esc).join("、"):"—")+'</td></tr>'
     + '<tr><th>出處</th><td>'+esc(s.出處.書名)+'　卷'+s.出處.卷+'</td></tr>'
@@ -553,7 +553,8 @@ function renderPanel(){
     if(cur<0){ el("panel").innerHTML = '<p class="hint">點左邊任何一個地方</p>'; el("prog").textContent=""; return; }
     const pl = places()[cur];
     el("panel").innerHTML = '<h3>'+esc(pl.地)+'</h3>'
-      + '<table class="facts"><tr><th>今日</th><td>待定位</td></tr>'
+      + '<table class="facts"><tr><th>今日</th><td>'
+      + esc((pl.事.find(function(e){return e.今地;})||{}).今地 || "原典地名尚未定位") + '</td></tr>'
       + '<tr><th>在這裡</th><td>' + pl.事.length + ' 件事</td></tr></table>'
       + pl.事.map(ev=>'<div style="margin:0 0 26px">'
           + '<table class="facts">'
@@ -716,7 +717,7 @@ function renderProfile(){
   const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
   if(!f){ el("profile").innerHTML = ""; return; }
   let h = '<div class="pf">';
-  const pk = PICS ? Object.keys(PICS).find(k => PICS[k].祖師 === p.介面名) : null;
+  const pk = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : null;
   if(pk){
     const m = PICS[pk];
     h += '<figure class="portrait"><img src="畫像/'+pk+'.jpg" alt="">'
