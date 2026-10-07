@@ -140,34 +140,6 @@
   .lpanel .warn{margin-top:10px; font-size:14.5px; color:#8a6f3c;
     background:#faf4e6; border:1px dashed #ddc89a; border-radius:4px; padding:10px 12px;}
 
-  /* ── 同字發光 ── */
-  .charbar{margin:0 0 22px; padding:18px 20px; background:#f7f5f1;
-    border:1px solid var(--rule); border-radius:8px;}
-  .cbhead{font-size:16.5px; color:var(--ink2); margin-bottom:12px;}
-  .cbhead s{text-decoration:none; font-size:14px; color:#a9a194;}
-  .chars{display:flex; flex-wrap:wrap; gap:7px;}
-  .ch{font-family:inherit; cursor:pointer; background:#fff; border:1px solid var(--rule);
-    border-radius:6px; padding:7px 11px 6px; line-height:1.25; min-width:50px;}
-  .ch b{display:block; font-size:23px; font-weight:normal;}
-  .ch s{display:block; text-decoration:none; font-size:12.5px; color:#a9a194;}
-  .ch.on{background:#f3d98a; border-color:#d8b445;}
-  .ch.on s{color:#8a6f3c;}
-  .dist{display:none; margin-top:16px; padding-top:14px; border-top:1px solid var(--rule);}
-  .dist.show{display:block;}
-  .dist .row{display:grid; grid-template-columns:4.5em 1fr 3em; gap:12px;
-    align-items:center; margin-bottom:7px; font-size:16px;}
-  .dist .bar{height:14px; border-radius:7px; background:#e6e1d8; overflow:hidden;}
-  .dist .bar i{display:block; height:100%; border-radius:7px;}
-  .dist .cnt{text-align:right; color:var(--ink2); font-size:15px;}
-  mark{background:#f3d98a; color:inherit; border-radius:3px; padding:0 1px;}
-  .hits{margin-top:16px;}
-  .hits .hgrp{margin-bottom:16px;}
-  .hits .hnm{font-size:17px; margin-bottom:7px;}
-  .hits .hq{background:#fff; border:1px solid var(--rule); border-radius:5px;
-    padding:12px 15px; margin-bottom:7px; font-size:17.5px; line-height:1.95;}
-  .hits .hq s{display:block; text-decoration:none; font-size:13.5px;
-    color:var(--ink2); margin-top:6px;}
-  .hits .more{font-size:14.5px; color:#a9a194;}
 
   /* ── 七面向檔案 ── */
   #profile{margin-top:40px;}
@@ -226,13 +198,6 @@
     原典只寫「十月一日」「年三十二」這種沒有年份的，不放上線。
     西元是為了排位置換算的，<b>不是原典的字</b>，畫面顯示的一律是原典字樣。</p>
   <div class="lpanel" id="lpanel"></div>
-</div>
-
-<div class="charbar">
-  <div class="cbhead">點一個字，看它在誰的原典裡出現　<s>依出現次數排序，不經挑選</s></div>
-  <div class="chars" id="chars"></div>
-  <div class="dist" id="dist"></div>
-  <div class="hits" id="hits"></div>
 </div>
 
 <div class="stage">
@@ -387,7 +352,6 @@ function renderMap(){
   paintSpots();
   renderSources();
   renderProfile();
-  paintChar();
 }
 
 /* 標籤避讓：撞到就把字翻到點的上方，再撞就往下拉開。
@@ -571,115 +535,15 @@ el("lines") && el("lines").addEventListener("click", e=>{
     + '<div class="rf3">' + esc(ev.出處.書名) + '　卷' + ev.出處.卷 + '　' + esc(ev.出處.經號) + '</div>'
     + (ev.註 ? '<div class="warn">' + esc(ev.註) + '</div>' : "")
     + '</div>').join("");
-  paintChar();
 });
 
-/* ── 同字發光：字從原典裡數出來，不是我挑的 ── */
-let 選字 = null;
-const 停 = new Set("之也曰於而以者乎矣焉哉所其不我汝為是有一二三十日月年云問答言師大小上下中出入在到來去此彼時即乃又復則與及等何如若可得見知".split(""));
-function 數字(){
-  const total = {}, per = {};
-  DATA.祖師.forEach(p=>{
-    per[p.介面名] = {};
-    const add = t => { for(const c of (t||"")){
-      if(c >= "一" && c <= "鿿" && !停.has(c)){
-        total[c] = (total[c]||0)+1; per[p.介面名][c] = (per[p.介面名][c]||0)+1; }
-    }};
-    (p.站||[]).forEach(s=>add(s.原文));
-    const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
-    if(f) 節序.forEach(k => (f[k]||[]).forEach(e => add(e.原文)));
-  });
-  return { total, per };
-}
-const 字表 = 數字();
-
-function renderChars(){
-  const top = Object.entries(字表.total).sort((a,b)=>b[1]-a[1]).slice(0,24);
-  el("chars").innerHTML = top.map(([c,n])=>
-    '<button class="ch' + (選字===c?" on":"") + '" data-c="' + esc(c) + '">'
-    + '<b>' + esc(c) + '</b><s>' + n + '</s></button>').join("");
-}
 
 /* 只給次數不給原文，那個數字是沒有意義的——點了字就要看得到它出現在哪些句子 */
-function allQuotes(){
-  const out = [];
-  DATA.祖師.forEach((p,pi)=>{
-    (p.站||[]).forEach(s=>out.push({pi, 名:p.介面名, 色:p.色, 原文:s.原文, 出處:s.出處}));
-    const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
-    if(f) 節序.forEach(k => (f[k]||[]).forEach(e =>
-      out.push({pi, 名:p.介面名, 色:p.色, 原文:e.原文, 出處:e.出處})));
-  });
-  return out;
-}
-const 全部引文 = allQuotes();
 
-function renderHits(){
-  const box = el("hits");
-  if(!選字){ box.innerHTML = ""; return; }
-  const 命中 = 全部引文.filter(q => q.原文.includes(選字));
-  let h = '<div style="font-size:15.5px; color:var(--ink2); margin-bottom:12px">'
-    + '「' + esc(選字) + '」出現在這些原文裡（共 ' + 命中.length + ' 段）</div>';
-  DATA.祖師.forEach((p,pi)=>{
-    const rows = 命中.filter(q=>q.pi===pi);
-    if(!rows.length) return;
-    const show = rows.slice(0, 4);
-    h += '<div class="hgrp"><div class="hnm" style="color:'+p.色+'">'
-      + esc(p.介面名) + '　' + rows.length + ' 段</div>'
-      + show.map(q=>'<div class="hq">' + esc(q.原文)
-          + '<s>' + esc(q.出處.書名) + '　卷' + q.出處.卷 + '　' + esc(q.出處.經號) + '</s></div>').join("")
-      + (rows.length > show.length
-          ? '<div class="more">另有 ' + (rows.length-show.length) + ' 段，在下面各區塊中以黃底標出</div>' : "")
-      + '</div>';
-  });
-  box.innerHTML = h;
-  paintChar();
-}
 
-function renderDist(){
-  const d = el("dist");
-  if(!選字){ d.className = "dist"; d.innerHTML = ""; return; }
-  const names = DATA.祖師.map(p=>p.介面名);
-  const vals = names.map(n => (字表.per[n]||{})[選字] || 0);
-  const max = Math.max(1, ...vals);
-  d.className = "dist show";
-  d.innerHTML = '<div style="font-size:16px; margin-bottom:10px">「'
-    + esc(選字) + '」字出現的次數</div>'
-    + names.map((n,i)=>
-      '<div class="row"><span>' + esc(n) + '</span>'
-      + '<span class="bar"><i style="width:' + (vals[i]/max*100) + '%; background:'
-      + DATA.祖師[i].色 + '"></i></span>'
-      + '<span class="cnt">' + vals[i] + '</span></div>').join("");
-}
 
 /* 只動顯示，不動資料：在已渲染的引文裡把選中的字包起來 */
-function paintChar(){
-  const sel = ".quote, .ent .q, .ppl .q2, .panel .qt2, .hits .hq, .lpanel .q3";
-  document.querySelectorAll(sel).forEach(box=>{
-    box.querySelectorAll("mark").forEach(m=>{
-      m.replaceWith(document.createTextNode(m.textContent));
-    });
-    box.normalize();
-    if(!選字) return;
-    const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-    const hits = [];
-    while(walk.nextNode()) if(walk.currentNode.nodeValue.includes(選字)) hits.push(walk.currentNode);
-    hits.forEach(node=>{
-      const parts = node.nodeValue.split(選字);
-      const frag = document.createDocumentFragment();
-      parts.forEach((t,i)=>{
-        if(i){ const m = document.createElement("mark"); m.textContent = 選字; frag.appendChild(m); }
-        if(t) frag.appendChild(document.createTextNode(t));
-      });
-      node.replaceWith(frag);
-    });
-  });
-}
 
-el("chars").addEventListener("click", e=>{
-  const b = e.target.closest(".ch"); if(!b) return;
-  選字 = (選字 === b.dataset.c) ? null : b.dataset.c;
-  renderChars(); renderDist(); renderHits(); paintChar();
-});
 
 function renderProfile(){
   const p = DATA.祖師[mi];
@@ -764,5 +628,5 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");
 el("bLife").onclick = ()=>setMode("life");
 
-renderMasters(); renderChars(); renderLines(); renderMap(); setMode("map");
+renderMasters(); renderLines(); renderMap(); setMode("map");
 </script>
