@@ -342,7 +342,7 @@ function layout(n){
 function 臉(名, has){
   const k = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === 名) : null;
   if(k) return '<div class="face pic"><img src="畫像/'+k+'.jpg" alt=""></div>';
-  return '<div class="face">'+(has ? '無畫像' : '建置中')+'</div>';
+  return '<div class="face">'+(has ? '' : '建置中')+'</div>';
 }
 
 function renderMasters(){

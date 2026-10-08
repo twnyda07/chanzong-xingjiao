@@ -1,0 +1,199 @@
+<meta charset="utf-8">
+<title>禪宗．祖師行腳　第二期架構</title>
+<style>
+  :root{--paper:#f4f1ea;--card:#fffdf8;--ink:#1a1714;--ink2:#4d453b;
+        --rule:#d8d1c4;--accent:#3f5248;--soft:#e7ece7;--c:#2f5c8f;--warn:#8a6f3c;}
+  *{box-sizing:border-box;}
+  body{margin:0;padding:0 0 90px;background:var(--paper);color:var(--ink);
+    font-family:"Songti TC","Noto Serif CJK TC",serif;font-size:21px;line-height:2.0;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 26px;}
+  header{padding:52px 0 24px;border-bottom:1px solid var(--rule);margin-bottom:10px;}
+  h1{font-size:40px;margin:0 0 10px;letter-spacing:3px;}
+  .sub{color:var(--ink2);font-size:19px;}
+  h2{font-size:29px;margin:52px 0 8px;padding-left:16px;border-left:4px solid var(--accent);}
+  h3{font-size:24px;margin:34px 0 10px;font-weight:normal;color:var(--c);}
+  p,li{font-size:20px;}
+  .lead{color:var(--ink2);margin:0 0 20px;padding-left:20px;}
+  .box{background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    padding:24px 26px;margin:0 0 16px;}
+  .tree{font-family:inherit;font-size:19px;line-height:1.95;white-space:pre;overflow-x:auto;
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:22px 24px;}
+  table{width:100%;border-collapse:collapse;font-size:19px;margin:12px 0 18px;}
+  th,td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--rule);
+    vertical-align:top;}
+  th{color:var(--ink2);font-weight:normal;}
+  .must td:first-child,.must th:first-child{width:10em;}
+  .warn{background:#faf4e6;border:1px dashed #ddc89a;border-radius:6px;
+    padding:16px 18px;margin:16px 0;color:#6f5a2e;font-size:19px;}
+  .warn b{color:#53421f;font-weight:normal;}
+  .no{background:#f6eeec;border:1px dashed #d9b9b0;border-radius:6px;
+    padding:16px 18px;margin:16px 0;color:#6e4a40;font-size:19px;}
+  .tag{display:inline-block;background:var(--soft);border:1px solid var(--rule);
+    border-radius:999px;padding:4px 14px;font-size:17px;margin:0 6px 6px 0;}
+  ol,ul{padding-left:1.4em;}
+  li{margin:7px 0;}
+  .foot{margin-top:50px;padding-top:20px;border-top:1px solid var(--rule);
+    color:var(--ink2);font-size:18px;}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>第二期架構：從六位到數百位</h1>
+  <div class="sub">
+    一花開五葉．禪宗．祖師行腳<br>
+    2026-10-08　已問過 ChatGPT（對話標題「禪宗史架構設計」留在你的紀錄裡）<br>
+    <b>它的話一個字都不會進網站</b>，只進這份規劃的判斷。
+  </div>
+</header>
+
+<h2>一、最關鍵的一句話</h2>
+<div class="box">
+  <p style="margin:0;font-size:23px">
+    不要把數百位禪師做成數百篇網頁，要做成一張<b>知識圖譜</b>——
+    人物頁只是圖譜的其中一種看法。
+  </p>
+</div>
+<p class="lead">這句我完全同意，而且它救的是後面幾年：
+骨架定對，五家七宗就只是「加資料」，不必再改網站。</p>
+
+<h2>二、現在這一期不會白做</h2>
+<div class="box">
+  我做的「一站一站走完他的一生」，在新架構裡<b>不是被丟掉，是降一層</b>——
+  從「全站入口」變成「人物頁裡的一個分頁」。
+  52 段原典、CHGIS 座標、遇到的人、距離年差、古畫，全部原樣沿用。
+  <br><br>
+  真正要改的是<b>入口</b>：六個人可以用「選一位走完」，六百個人不行。
+</div>
+
+<h2>三、資訊架構四層</h2>
+
+<h3>L0　首頁＝一花開五葉的法脈總圖</h3>
+<div class="tree">達摩 → 慧可 → 僧璨 → 道信 → 弘忍 → 惠能
+                                          │
+                        ┌─────────────────┴─────────────────┐
+                    南嶽懷讓                            青原行思
+                        │                                   │
+              ┌─────────┴─────────┐              ┌──────────┼──────────┐
+            溈仰                 臨濟            曹洞       雲門       法眼
+                                  │
+                           ┌──────┴──────┐
+                         黃龍          楊岐</div>
+<p class="lead">首頁不出現任何名單，只有這張圖。滑過一枝，該枝亮起、其餘淡出，
+旁邊只出數字：人物數｜世代數｜地點數｜原典段數。沒有一句介紹文字。</p>
+
+<div class="warn">
+  <b>一個分際問題，我要先跟你講。</b>
+  「一花開五葉」這句出自達摩付法偈（景德傳燈錄卷三：「一華開五葉　結果自然成」），
+  但<b>把「五葉」解作「五家」是後人的解釋</b>，原偈沒有這樣說。
+  所以我的做法是：這五個字可以當<b>網站的視覺骨架與導航名稱</b>，
+  但網站<b>不宣稱</b>「五葉就是五家」這個歷史論斷——那會變成我們在替原典下註解，
+  違反第零條。導航是導航，史料陳述是史料陳述，兩件事分開。
+</div>
+
+<h3>L1　宗脈頁</h3>
+<p>例如點「臨濟」，出現一條可展開的世系：惠能 → 南嶽懷讓 → 馬祖道一 → 百丈懷海 →
+黃檗希運 → 臨濟義玄 → … → 石霜楚圓 → 黃龍慧南／楊岐方會。
+<b>沒有「臨濟宗介紹」這種現代文字</b>，就是一棵可以點的樹。</p>
+
+<h3>L2　人物頁</h3>
+<p>頂部只給結構化事實：法脈位置｜年代｜主要地點｜師｜法嗣｜原典段數｜事件數。
+下面是六個<b>資料視圖</b>（不是文章章節）：</p>
+<p>
+  <span class="tag">生涯</span><span class="tag">原典</span><span class="tag">公案</span>
+  <span class="tag">相遇的人</span><span class="tag">地點</span><span class="tag">法脈</span>
+  <span class="tag">文物（有才出現）</span>
+</p>
+<p class="lead">「生涯」就是現在這一期做好的一站一站走完一生，原封不動搬進來。</p>
+
+<h3>L3　公案／事件頁（第二期最該新增的一層）</h3>
+<p>公案不該只是人物頁裡的一段文字，它要變成<b>獨立的節點</b>。
+例如「南泉斬貓」可以同時連到：南泉普願、趙州從諗、東西兩堂、地點、年代、
+出現在哪幾部原典、各本的異文。</p>
+<p>於是整個網站的核心關係變成：</p>
+<div class="tree">禪師 ←→ 事件 ←→ 禪師
+事件 ←→ 地點
+事件 ←→ 原典
+禪師 ←→ 法脈</div>
+
+<h2>四、四個維度，地位不一樣</h2>
+<table>
+  <tr><th>維度</th><th>地位</th><th>為什麼</th></tr>
+  <tr><td><b>法脈</b></td><td>主骨架</td><td>禪宗的自我認同就是師承，這是唯一能撐起數百人的軸</td></tr>
+  <tr><td><b>時代</b></td><td>橫切視圖</td><td>拖時間軸看「此刻誰在世、南嶽與青原各走到哪」</td></tr>
+  <tr><td><b>地理</b></td><td>橫切視圖</td><td>CHGIS 的優勢在這裡放大：依年代與法脈聚合，放大才出寺院與人</td></tr>
+  <tr><td><b>公案</b></td><td>橫切視圖</td><td>很多人知道趙州狗子，卻不知道趙州是哪一支第幾代——從公案倒著進去</td></tr>
+</table>
+<p>其餘全部只能當<b>篩選器</b>：師父、弟子、寺院、出生地、示寂地、經號、有無畫像……</p>
+<div class="warn"><b>朝代不要當主導航。</b>唐／五代／宋很好用，
+但用朝代切會把師承關係切斷——師父在唐、弟子在五代，一刀下去就斷了。</div>
+
+<h2>五、資料結構：現在就定死，免得做到一半重來</h2>
+<p>六張表：<span class="tag">人物</span><span class="tag">事件</span><span class="tag">關係</span>
+<span class="tag">地點</span><span class="tag">出處</span><span class="tag">文物</span></p>
+
+<h3>每一位禪師必填的最小集合</h3>
+<table class="must">
+  <tr><th>欄位</th><th>為什麼非有不可</th></tr>
+  <tr><td>永久編號</td><td>改名、異寫都不影響連結</td></tr>
+  <tr><td>標準名</td><td>介面顯示用</td></tr>
+  <tr><td>各書異寫</td><td>景德作「慧能」、壇經作「惠能」，不統一就對不起來</td></tr>
+  <tr><td>法脈父節點</td><td>沒有它就建不出樹</td></tr>
+  <tr><td>世代序</td><td>排序用</td></tr>
+  <tr><td>主幹</td><td>南嶽／青原</td></tr>
+  <tr><td>宗系</td><td>臨濟／曹洞…；尚未形成宗派的留空</td></tr>
+  <tr><td>活動年代</td><td>可精確、可區間</td></tr>
+  <tr><td>至少一筆原典出處</td><td>沒有出處就不該存在於這個網站</td></tr>
+  <tr><td>逐字核驗狀態</td><td>建置時機器檢查的依據</td></tr>
+</table>
+
+<div class="warn">
+  <b>生年、卒年不列入必填。</b>很多禪師的生卒根本無法可靠確定。
+  資料結構必須原生允許空值，<b>而不是逼填表的人去推算</b>——
+  這跟你定的「不要自己編事實」是同一件事。僧璨就是例子。
+</div>
+
+<h3>有資料才出現（全部可空）</h3>
+<p>籍貫、俗姓、出家、受戒、參學、開悟、住持寺院、遷錫、示寂、塔所、諡號、
+法嗣、重要往來人物、著作、語錄、偈頌、公案、碑銘、塔銘、畫像、墨蹟、館藏文物、精確座標。</p>
+
+<div class="no">
+  <b>沒有的欄位就整個不顯示</b>，不要出現「籍貫：不詳」「畫像：無」。
+  那是現代資料庫在說話，不是原典。<br>
+  （這一條我要回頭修現在這一版——僧璨的卡片現在寫著「無畫像」，要拿掉。）
+</div>
+
+<h2>六、進站前三十秒</h2>
+<p class="lead">第一屏不要有搜尋框＋六百個名字＋地圖＋年表＋五宗介紹。只有那棵樹。</p>
+<table>
+  <tr><th>第一屏</th><td>一花開五葉的法脈圖。中央是達摩，往下到惠能，之後分枝，
+    最後停在五個大節點。滑過一枝就亮起，只出數字不出介紹。</td></tr>
+  <tr><th>第二屏</th><td>點「臨濟」→ 左邊法脈、右邊同步時間軸、下面一張小地圖。
+    三個維度同時定位。</td></tr>
+  <tr><th>第三屏</th><td>點「臨濟義玄」→ 人物頁，六個資料視圖。
+    點「生涯」就是現在做好的一站一站走完一生。</td></tr>
+</table>
+<p><b>點擊路徑只有三步</b>：首頁 → 一葉 → 一枝 → 一人。
+不是「首頁 → 六百人名單 → 自己找」。</p>
+
+<h2>七、我建議的下一步順序</h2>
+<ol>
+  <li><b>先不要急著加第七位禪師。</b>先把六張表的結構定死。</li>
+  <li>把現在的 52 站<b>無損倒進新結構</b>測一次。倒得進去，才證明結構夠用。</li>
+  <li>倒完之後才開始批量擴充。這一步做對，五家七宗只是加資料，不會再動骨架。</li>
+  <li>同時回頭修兩件小事：拿掉「無畫像」這種空欄顯示；把「一花開五葉」標成導航名稱而非史論。</li>
+</ol>
+
+<div class="warn">
+  <b>規模要先講清楚。</b>數百位禪師、每人數段原典逐字核對、每個地名走歷史地理定位、
+  每張畫像確認館藏與授權——這不是一兩天的事。
+  我需要你決定：<b>要做到哪一代為止</b>（例如先到五家成立、或到宋代為止），
+  以及<b>要不要先做一個宗派當樣板</b>（我建議臨濟，資料最多、法脈最清楚）。
+</div>
+
+<div class="foot">
+  ChatGPT 在回答裡引了臺大佛學數位圖書館與一個外部禪宗知識庫當佐證。
+  那兩個都不在你核可的來源清單上，<b>我沒有採用它們的任何內容</b>，
+  只採用了架構層面的判斷。<br>
+  本頁是規劃文件，不是網站的一部分。
+</div>
+</div>
