@@ -28,9 +28,17 @@
   .hero .ct{margin-top:8px; font-size:15px; color:#978d7d; letter-spacing:1px;}
   /* 古畫**整幅不裁**。立軸（397×900）裁成橫幅會只剩一角，而且把博物館藏品切成 banner
      本身就不妥當。改成右邊一欄、contain 不裁，深底襯著，橫幅直幅都成立。 */
-  .hero .art{position:relative; width:212px; background:#13110d;
+  .hero .art{position:relative; width:236px; background:#13110d; padding:0 16px;
     border-left:1px solid #2b261e; display:flex; align-items:center; justify-content:center;}
-  .hero .art img{max-width:100%; max-height:248px; display:block;}
+  /* 輪播：多幅疊著淡入淡出，一次只顯示一幅 */
+  .hero .art img{max-width:100%; max-height:242px; display:block;
+    position:absolute; opacity:0; transition:opacity .9s ease;}
+  .hero .art img.on{opacity:1; position:relative;}
+  .hero .art .dots{position:absolute; bottom:8px; left:0; right:0;
+    display:flex; justify-content:center; gap:7px;}
+  .hero .art .dot{width:7px; height:7px; border-radius:50%; padding:0;
+    border:1px solid #8c8373; background:none; cursor:pointer; transition:.25s;}
+  .hero .art .dot.on{background:#ded5c4; border-color:#ded5c4;}
   .hero .cr{padding:9px 12px 11px; font-size:11.5px; color:#9a9080; line-height:1.7;
     grid-column:1 / -1; border-top:1px solid #2b261e; background:#15130f;}
   .hero.nopic{background:linear-gradient(100deg,#1b1813,#262117);}
@@ -140,14 +148,19 @@
   /* 地圖改深底。原本 #f7f5f1 跟紙底 #f4f1ea 只差 1.04:1——整站最重要的那塊東西，
      在畫面上幾乎看不出是一塊東西（2026-10-08 量過，使用者說「排版及顏色不吸引人」）。
      底色不動（紙色是定案的），但地圖這一塊要有自己的份量，圓點與路線才亮得起來。 */
-  .mapbox{background:#232019; border:1px solid #2f2a22; border-radius:8px;
-    position:relative; height:520px;}
+  /* 地圖與「原典未載地點」要在**同一塊深色區**裡。
+     2026-10-08 一度把未定位的站整個搬到地圖外面的紙底上（為了修標籤溢出），
+     但使用者說那樣「很困惑，找不到也想不到關聯性」——它們本來就是同一趟行腳的站。
+     現在改成：深色外框 .mapwrap 包住地圖與下緣那條，關聯看得出來；
+     那條仍用正常流排版、不做絕對定位，所以標籤一樣不可能溢出。 */
+  .mapwrap{background:#232019; border:1px solid #2f2a22; border-radius:8px; overflow:hidden;}
+  .mapbox{background:none; border:0; position:relative; height:520px;}
   /* 查不到座標的地名不要漂在海上。原本收在地圖框內底部一條帶子裡，
      但圓點下方的地名標籤會掉出框外（2026-10-08 使用者指出）。
      改成地圖**下面**獨立一條，用正常流排版、不做絕對定位，結構上就不可能溢出。 */
-  .nogeoband{margin-top:10px; background:#f1eee8; border:1px dashed var(--rule);
-    border-radius:8px; padding:9px 12px 11px;}
-  .nogeoband .cap{font-size:12.5px; color:#a9a194; margin:0 0 7px;}
+  .nogeoband{margin:0; background:rgba(255,255,255,.035); border:0;
+    border-top:1px dashed #413a2e; border-radius:0; padding:10px 14px 12px;}
+  .nogeoband .cap{font-size:12.5px; color:#9c9080; margin:0 0 7px;}
   .nogeoband .row{display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center;}
   .nogeoband .spot{position:static; transform:none; display:inline-flex; align-items:center;
     gap:7px; padding:2px 4px; text-align:left;}
@@ -228,8 +241,9 @@
   .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
     background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
-  .nogeoband .spot.nogeo:not(.lit):not(.next) i{background:#efece5; border:1px dashed #c9c2b4;}
-  .nogeoband .spot b{color:var(--ink); background:none;}
+  .nogeoband .spot.nogeo:not(.lit):not(.next) i{background:none; border:1px dashed #6d6353;}
+  .nogeoband .spot b{color:#ded5c4; background:none;}
+  .nogeoband .spot.nogeo:not(.lit):not(.next) b{color:#9c9080;}
   .spot.nogeo.lit i{border:1px dashed #fff;}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent);}
     50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--c) 0%,transparent);}}
@@ -331,8 +345,10 @@
 <p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
 
 <div class="stage">
-  <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
-    <div class="nogeoband" id="nogeoband" hidden></div>
+  <div><div class="mapwrap">
+      <div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
+      <div class="nogeoband" id="nogeoband" hidden></div>
+    </div>
     <div class="chips" id="chips"></div></div>
   <div class="panel" id="panel"><p class="hint">先選一位祖師</p></div>
 </div>
@@ -511,7 +527,7 @@ function renderMap(){
   const pts = nodes.map((_,i)=> (geo && geo[i]) ? geo[i] : null);
   const 未定位 = pts.filter(p=>!p).length;
   el("mapNote").textContent = geo
-    ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，地圖下面那條是尚未定位的地名。"
+    ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，底下那一條是還沒定位的站。"
               : "圓點是歷史地理系統定位的真實位置。")
     : "這一位的地點尚未定位，圓點為示意排列。";
   const box = el("mapbox");
@@ -519,7 +535,7 @@ function renderMap(){
   const band = el("nogeoband");
   band.hidden = !未定位;
   band.innerHTML = 未定位
-    ? '<p class="cap">以下地名尚未定位，排在地圖外面</p><div class="row"></div>' : "";
+    ? '<p class="cap">以下這幾站還沒有定位，先排在這裡</p><div class="row"></div>' : "";
   const row = band.querySelector(".row");
   nodes.forEach((s,i)=>{
     const b = document.createElement("button");
@@ -930,19 +946,56 @@ el("lines") && el("lines").addEventListener("click", e=>{
    一個字都不自己編（鐵律零）。沒有畫像的就走純墨底，不掛假圖。 */
 function renderHero(){
   const p = DATA.祖師[mi];
-  const k = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : null;
-  const m = k ? PICS[k] : null;
+  const ks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
   const 地 = [];
   (p.站 || []).forEach(s => { if(s.地 && 地[地.length-1] !== s.地) 地.push(s.地); });
   const 路 = 地.slice(0, 4).map(esc).join("　→　") + (地.length > 4 ? "　→　…" : "");
   const 件 = (p.站 || []).length;
-  el("hero").innerHTML = '<div class="hero'+(m ? '' : ' nopic')+'">'
+  el("hero").innerHTML = '<div class="hero'+(ks.length ? '' : ' nopic')+'">'
     + '<div class="tx"><div class="nm">'+esc(p.介面名)+'</div>'
     + (路 ? '<div class="rt">'+路+'</div>' : '')
     + '<div class="ct">'+stations().length+' 站　'+件+' 件事</div></div>'
-    + (m ? '<div class="art"><img src="畫像/'+k+'.jpg" alt=""></div>' : '')
-    + (m ? '<div class="cr">'+esc(m.館藏)+(m.年代 ? '　'+esc(m.年代) : '')+'　'+esc(m.授權)+'</div>' : '')
+    + (ks.length
+        ? '<div class="art">'
+          + ks.map((k,i)=>'<img src="畫像/'+k+'.jpg" alt=""'+(i ? '' : ' class="on"')+'>').join("")
+          + (ks.length>1 ? '<div class="dots">'
+              + ks.map((k,i)=>'<button class="dot'+(i ? '' : ' on')+'" data-n="'+i+'"'
+                  + ' aria-label="第'+(i+1)+'幅"></button>').join("") + '</div>' : '')
+          + '</div>'
+        : '')
+    + (ks.length ? '<div class="cr"></div>' : '')
     + '</div>';
+  輪播(ks);
+}
+
+/* 有古畫的都輪播（使用者 2026-10-08：「畫面會比較有趣」）。
+   **出處一定要跟著當下那一幅換**——每幅的館藏、年代、授權都不一樣，
+   掛錯就是把甲館的藏品說成乙館的。只有一幅時不輪播、不出圓點。 */
+let 輪播計時 = null;
+function 輪播(ks){
+  clearInterval(輪播計時); 輪播計時 = null;
+  if(!ks.length) return;
+  const 區 = el("hero").querySelector(".art");
+  const 圖 = [...區.querySelectorAll("img")];
+  const 點 = [...區.querySelectorAll(".dot")];
+  const 出處 = el("hero").querySelector(".cr");
+  let n = 0;
+  const 換 = i => {
+    n = (i + ks.length) % ks.length;
+    圖.forEach((e,j)=>e.classList.toggle("on", j===n));
+    點.forEach((e,j)=>e.classList.toggle("on", j===n));
+    const m = PICS[ks[n]];
+    出處.innerHTML = esc(m.館藏) + (m.年代 ? '　'+esc(m.年代) : '') + '　' + esc(m.授權);
+  };
+  換(0);
+  if(ks.length < 2) return;
+  點.forEach(b => b.addEventListener("click", ()=>{ 換(+b.dataset.n); 重新計時(); }));
+  const 不要動畫 = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function 重新計時(){
+    clearInterval(輪播計時);
+    if(!不要動畫) 輪播計時 = setInterval(()=>換(n+1), 6000);
+  }
+  重新計時();
 }
 
 function renderGallery(){
