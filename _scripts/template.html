@@ -802,11 +802,20 @@ function renderGallery(){
   const p = DATA.祖師[mi];
   const pks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
   if(!pks.length){
+    // 「查遍博物館藏品還是找不到」只能對**真的查過**的那幾位說。
+    // 沒查過就說查過，是拿沒做過的事當事實——臨濟宗那幾位目前就還沒查。
+    const 查過 = PICS && PICS["_查過但指認不了"]
+                 && PICS["_查過但指認不了"].名單
+                 && PICS["_查過但指認不了"].名單.indexOf(p.介面名) >= 0;
     el("gallery").innerHTML = '<div class="gallery nopic"><div class="gtitle">'
       + esc(p.介面名) + '　現存畫像 0 幅</div>'
-      + '<p class="nopicmsg">查遍博物館公有領域藏品，目前找不到<b>可以確定畫的就是他</b>的畫像。'
-      + '有幾張傳為他的像，但沒有榜題、沒有館藏、來源不明，'
-      + '掛上去等於指錯人，所以這裡留白。</p></div>';
+      + (查過
+         ? '<p class="nopicmsg">查遍博物館公有領域藏品，目前找不到<b>可以確定畫的就是他</b>的畫像。'
+           + '有幾張傳為他的像，但沒有榜題、沒有館藏、來源不明，'
+           + '掛上去等於指錯人，所以這裡留白。</p>'
+         : '<p class="nopicmsg">這一位的畫像<b>還沒有查</b>。'
+           + '查到了、而且榜題或圖錄指認得出來，才會掛上來。</p>')
+      + '</div>';
     return;
   }
   el("gallery").innerHTML = '<div class="gallery"><div class="gtitle">'

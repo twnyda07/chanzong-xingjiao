@@ -89,7 +89,17 @@ def main():
                 elif bare(ev) not in cache[key]:
                     errors.append("%s：地依據對不上 %s 卷%s" % (where, src["書名"], src["卷"]))
                 elif not _subseq(bare(place), bare(ev)) and not _subseq(bare(place), bare(quote)):
-                    errors.append("%s：地點「%s」在它自己的依據裡拼不出來" % (where, place))
+                    # 原典常是第一次寫全名、之後只寫簡稱（「依棲黃蘗山中」→「却回黃蘗」）。
+                    # 這一句只有簡稱，但**同一卷別處有全名**，就認——那不是我推的，
+                    # 是同一本書自己寫過的字。全卷都找不到全名才是編出來的，要擋。
+                    if not (bare(place) in cache[key] and
+                            any(_subseq(bare(place)[:k], bare(ev))
+                                for k in range(len(bare(place)), 1, -1))):
+                        errors.append("%s：地點「%s」在它自己的依據裡拼不出來，"
+                                      "全卷也沒有全名" % (where, place))
+                    else:
+                        warns.append("%s：地點「%s」這一句只寫簡稱，依同卷別處的全名認定"
+                                     % (where, place))
 
             # 結構檢查：不可以有放轉述的欄位
             for f in st:
@@ -108,7 +118,7 @@ def main():
         sys.exit(1)
     print("全部逐字對上原典。通過。")
     done = sum(1 for p in data["祖師"] if p.get("站"))
-    print("進度：%d／6 位祖師已建站" % done)
+    print("進度：%d／%d 位祖師已建站" % (done, len(data["祖師"])))
 
 
 if __name__ == "__main__":
