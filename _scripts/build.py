@@ -15,12 +15,13 @@ DATA = os.path.join(ROOT, "_data", "祖師.json")
 PROF = os.path.join(ROOT, "_data", "祖師檔案.json")
 ERAS = os.path.join(ROOT, "_data", "年代對照.json")
 PICS = os.path.join(ROOT, "_data", "畫像出處.json")
+TREE = os.path.join(ROOT, "_data", "法脈樹.json")
 TPL = os.path.join(HERE, "template.html")
 OUT = os.path.join(ROOT, "遊戲.html")
 
 
 def main():
-    for v in ("verify.py", "verify_profiles.py"):
+    for v in ("verify.py", "verify_profiles.py", "verify_tree.py"):
         r = subprocess.run([sys.executable, os.path.join(HERE, v)],
                            capture_output=True, text=True)
         sys.stdout.write(r.stdout)
@@ -39,6 +40,9 @@ def main():
     eras = json.load(open(ERAS, encoding="utf-8"))
     html = html.replace("/*__ERAS__*/null",
                         json.dumps(eras, ensure_ascii=False, separators=(",", ":")))
+    tree = json.load(open(TREE, encoding="utf-8"))
+    html = html.replace("/*__TREE__*/null",
+                        json.dumps(tree, ensure_ascii=False, separators=(",", ":")))
     pics = json.load(open(PICS, encoding="utf-8"))
     html = html.replace("/*__PICS__*/null",
                         json.dumps(pics, ensure_ascii=False, separators=(",", ":")))

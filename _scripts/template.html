@@ -17,19 +17,33 @@
   h1{font-size:46px; margin:0 0 6px; letter-spacing:8px;}
   header .sub{color:var(--ink2); font-size:21px; letter-spacing:3px;}
 
-  .masters{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:26px 0 8px;}
-  .m{width:124px; padding:16px 8px 13px; border:1px solid var(--rule); border-radius:8px;
-     background:#fff; text-align:center; cursor:pointer; transition:.3s;}
-  .m .face{width:68px; height:82px; margin:0 auto 9px; border-radius:36px 36px 30px 30px;
-     background:linear-gradient(180deg,#efebe3,#e3ded4); display:flex; align-items:center;
-     justify-content:center; color:#b3aa9c; font-size:13px; transition:.4s; overflow:hidden;}
-  .m .face.pic{background:#efece5;}
-  .m{cursor:pointer;}
-  .m .face.pic::after{content:"看畫像"; position:absolute; left:0; right:0; bottom:0;
-    background:rgba(26,23,20,.62); color:#fff; font-size:13px; line-height:22px;
-    opacity:0; transition:.25s;}
-  .m .face{position:relative;}
-  .m:hover .face.pic::after{opacity:1;}
+  /* 入口＝一棵法脈樹，不是一排頭像。
+     六個人可以並排，六百個人不行——頭像並列到後面會變成一牆臉（使用者 2026-10-08 指出）。
+     樹是縱向的，一代一節；分枝時才並排。加幾百位只是往下長，版面不會垮。
+     頭像移到點進某一位之後的畫像區，入口只出名字。 */
+  .masters{margin:20px 0 10px;}
+  .gen{display:flex; justify-content:center;}
+  .node{display:flex; flex-direction:column; align-items:center;}
+  .limb{display:flex; flex-direction:column; align-items:center; flex:0 1 auto;}
+  .edge{width:1px; height:11px; background:var(--rule); margin:0 auto;}
+  .edge.dash{background:none; border-left:1px dashed var(--rule);}
+  .fork{display:flex; justify-content:center; gap:30px; align-items:flex-start;}
+  /* 窄螢幕上兩枝並排會把整枝推出畫面外（實測 412px 時南嶽那一枝整條看不到）。
+     改成上下排，每一枝靠一條虛線鉛直軌，一樣看得出是從同一位分出來的兩枝。 */
+  @media (max-width:760px){
+    .fork{flex-direction:column; align-items:stretch; gap:14px;}
+    .fork > .limb{align-items:flex-start; border-left:1px dashed var(--rule);
+                  padding-left:14px; margin-left:8px;}
+    .fork > .limb .gen, .fork > .limb .fork{justify-content:flex-start;}
+    .fork > .limb .edge{margin:0 0 0 24px;}
+    .m{min-width:0;}
+  }
+  /* 一節一行，整節只有一行高。十六節才九百多像素，不會把地圖推到天邊去 */
+  .m{display:flex; align-items:baseline; justify-content:center; gap:10px;
+     min-width:210px; padding:6px 18px; border:1px solid var(--rule); border-radius:8px;
+     background:#fff; text-align:center; cursor:pointer; transition:.25s;}
+  .m .face{display:none;}            /* 入口不放頭像，畫像在點進去之後才出現 */
+  .gtag{font-size:13.5px; color:#a9a194; letter-spacing:1px; margin:3px 0 1px;}
   @keyframes flash{0%{box-shadow:0 0 0 0 rgba(47,92,143,0); background:var(--card);}
     25%{box-shadow:0 0 0 8px rgba(47,92,143,.30); background:#e9f0f7;}
     100%{box-shadow:0 0 0 0 rgba(47,92,143,0); background:var(--card);}}
@@ -65,12 +79,16 @@
   .lightbox .cap a{color:#cfe0f0;}
   .lightbox .close{position:absolute; top:18px; right:24px; font-size:34px; color:#f4f1ea;
     background:none; border:0; cursor:pointer; font-family:inherit;}
-  .m b{font-size:25px; font-weight:normal; display:block;}
-  .m s{font-size:16px; color:var(--ink2); text-decoration:none; display:block; margin-top:2px;}
-  .m.on{border-color:transparent; box-shadow:0 0 0 2px var(--mc) inset; transform:translateY(-3px);}
-  .m.on .face{background:color-mix(in srgb,var(--mc) 20%,#fff); color:var(--mc);}
+  .m b{font-size:23px; font-weight:normal;}
+  .m s{font-size:15px; color:var(--ink2); text-decoration:none;}
+  .m.on{border-color:transparent; box-shadow:0 0 0 2px var(--mc) inset;}
   .m.on b{color:var(--mc);}
-  .m.todo{opacity:.5; cursor:default;}
+  .m:hover{border-color:var(--mc, var(--rule));}
+  /* 還沒建的照出來，但一看就知道還沒建：淡、虛線、不給點。
+     空著不畫會讓人以為傳承到這裡斷了。 */
+  .m.todo{opacity:.62; cursor:default; border-style:dashed; background:none;}
+  .m.todo b{font-size:21px;}
+  .m.todo:hover{border-color:var(--rule);}
 
   .modes{display:flex; gap:10px; justify-content:center; margin:22px 0 6px;}
   .modes button{font-family:inherit; font-size:21px; padding:12px 26px; border-radius:999px;
@@ -257,7 +275,6 @@
 <div class="wrap">
 <header>
   <h1>禪宗．祖師行腳</h1>
-  <div class="sub" id="sub"></div>
 </header>
 
 <div class="masters" id="masters"></div>
@@ -314,6 +331,7 @@ const DATA = /*__DATA__*/null;
 const PROFILES = /*__PROFILES__*/null;
 const ERAS = /*__ERAS__*/null;
 const PICS = /*__PICS__*/null;
+const TREE = /*__TREE__*/null;
 let mi = 0, mode = "map", step = 0, cur = -1, 回看 = -1;
 
 const el = id => document.getElementById(id);
@@ -368,14 +386,47 @@ function 臉(名, has){
   return '<div class="face">'+(has ? '' : '建置中')+'</div>';
 }
 
+/* 入口畫成一棵法脈樹。
+   每一條線都是一句史料主張（「這個人是那個人的法嗣」），所以樹的形狀來自
+   _data/法脈樹.json，那裡每個節點都帶原典依據，建置時 verify_tree.py 會逐字查。
+   還沒建的節點照出、標明還沒建——空著不畫會讓人以為傳承到這裡斷了。 */
+function 節點卡(n){
+  const i = DATA.祖師.findIndex(p => p.介面名 === n.id);
+  const p = i >= 0 ? DATA.祖師[i] : null;
+  const has = !!(p && (p.站||[]).length);
+  const 色 = p ? p.色 : "#6b645b";
+  const 腳 = has ? (stations(i).length + ' 站　' + p.站.length + ' 件事')
+                 : '還沒建';
+  return '<div class="node">'
+    + (n.世標 ? '<div class="gtag">'+esc(n.世標)+'</div>' : "")
+    + '<div class="m'+(has && i===mi ? ' on' : '')+(has ? '' : ' todo')+'"'
+    + (has ? ' data-i="'+i+'"' : '')
+    + ' style="--mc:'+色+'">'
+    + '<b>'+esc(n.名)+'</b><s>'+esc(腳)+'</s></div></div>';
+}
+
 function renderMasters(){
-  el("masters").innerHTML = DATA.祖師.map((p,i)=>{
-    const has = (p.站||[]).length>0;
-    return '<div class="m'+(i===mi&&has?' on':'')+(has?'':' todo')+'" data-i="'+i+'" style="--mc:'+p.色+'">'
-      + 臉(p.介面名, has)
-      + '<b>'+esc(p.介面名)+'</b><s>'
-      + (has ? (stations(i).length+' 站　'+p.站.length+' 件事') : '尚未建站')+'</s></div>';
-  }).join("");
+  const 節點 = (TREE && TREE.節點) || [];
+  const 子 = {};
+  節點.forEach(n => { (子[n.父 || ""] = 子[n.父 || ""] || []).push(n); });
+
+  // 一路往下長，遇到分枝就並排。這個形狀加幾百位只是變長，不會變成一牆臉。
+  function 畫(n, 首){
+    let h = (首 ? "" : '<div class="edge'+(n.狀態==="已建" ? "" : " dash")+'"></div>')
+          + '<div class="gen">' + 節點卡(n) + '</div>';
+    const ks = 子[n.id] || [];
+    if(ks.length === 1){
+      h += 畫(ks[0], false);
+    } else if(ks.length > 1){
+      h += '<div class="edge dash"></div>'
+        + '<div class="fork">'
+        + ks.map(k => '<div class="limb">' + 畫(k, true) + '</div>').join("")
+        + '</div>';
+    }
+    return h;
+  }
+  const 根 = (子[""] || [])[0];
+  el("masters").innerHTML = 根 ? '<div class="limb">' + 畫(根, true) + '</div>' : "";
 }
 
 /* 一站＝一個地點的一次造訪。連續同一地點的記載合併成一站，站內再分列各段原文。
@@ -974,9 +1025,8 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");      // 已在地圖模式時＝重設，面板回到提示
 el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第一站重走
 
-// 標題下那排名字跟著資料走。原本是寫死的六個名字，加了臨濟五位之後就對不上了
-el("sub").textContent = DATA.祖師.filter(p=>(p.站||[]).length)
-                                 .map(p=>p.介面名).join("　");
+// 標題下原本那排名字已經移除——法脈樹本身就把每一位列出來了，再列一次是重複，
+// 而且名字一多就會換行成一團。
 mi = 讀回選擇();                       // 重載後回到原本在看的那一位，不要默默跳回達摩
 renderMasters(); renderLines(); renderMap(); setMode("map");
 // 上一頁／下一頁換了網址裡的名字也要跟著換人
