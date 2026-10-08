@@ -250,7 +250,33 @@
   .who{margin-top:16px;}
   .who .wht{font-size:17px; color:var(--ink2); margin-bottom:8px;}
   .wtag{display:inline-block; font-size:20px; padding:8px 16px; margin:0 8px 8px 0;
-    border-radius:999px; background:var(--soft); border:1px solid var(--rule); color:var(--ink);}
+    border-radius:999px; background:var(--soft); border:1px solid var(--rule); color:var(--ink);
+    font-family:inherit; cursor:pointer; transition:.2s;}
+  .wtag:hover, .wtag:focus{border-color:var(--c); color:var(--c);}
+  .wtag.here{border-color:var(--c);}         /* 站上收錄的祖師 */
+  .wtag.here::after{content:"　›"; color:var(--c);}
+
+  /* 點人名跳出來的那一層。只放原典原文與事實標註，沒有生平簡介——
+     我們沒有那個資料，也不可以自己寫。 */
+  .whobox{position:fixed; inset:0; background:rgba(20,18,14,.72); z-index:60;
+    display:none; align-items:flex-start; justify-content:center; padding:5vh 16px;
+    overflow:auto;}
+  .whobox.on{display:flex;}
+  .whocard{background:var(--card); border-radius:10px; max-width:760px; width:100%;
+    padding:28px 30px 34px; position:relative;}
+  .whocard h3{margin:0; font-size:32px; font-weight:normal; letter-spacing:4px;}
+  .whocard .sub{color:var(--ink2); font-size:16px; margin-top:6px;}
+  .whocard .gobtn{margin-top:16px; font-family:inherit; font-size:19px; padding:10px 22px;
+    border-radius:999px; border:1px solid var(--c); background:var(--c); color:#fff; cursor:pointer;}
+  .whocard .sec{margin-top:26px; font-size:16px; color:var(--ink2);
+    border-top:1px solid var(--rule); padding-top:16px;}
+  .whocard .item{margin-top:14px;}
+  .whocard .where{font-size:15.5px; color:var(--ink2);}
+  .whocard .q{margin-top:5px; background:var(--soft); border-left:4px solid var(--rule);
+    padding:11px 14px; font-size:18px; line-height:2.0; border-radius:0 5px 5px 0;}
+  .whocard .src{font-size:13px; color:#8c8373; margin-top:4px;}
+  .whoclose{position:absolute; right:14px; top:12px; font-size:28px; line-height:1;
+    background:none; border:0; color:var(--ink2); cursor:pointer; font-family:inherit;}
   .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
     background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
@@ -376,6 +402,8 @@
 <p class="prog" id="prog"></p>
 
 <div id="profile"></div>
+
+<div class="whobox" id="whobox"><div class="whocard" id="whocard"></div></div>
 
 <div class="lightbox" id="lightbox">
   <button class="close" id="lbClose" aria-label="關閉">×</button>
@@ -760,7 +788,8 @@ function 路段表(st){
 function 人條(列){
   if(!列 || !列.length) return "";
   return '<div class="who"><div class="wht">在這裡遇到的人</div>'
-    + 列.map(n=>'<span class="wtag">'+esc(n)+'</span>').join("") + '</div>';
+    + 列.map(n=>'<button class="wtag'+(找祖師(n)>=0 ? ' here' : '')+'" data-n="'+esc(n)+'">'
+        + esc(n)+'</button>').join("") + '</div>';
 }
 
 function 事段(ev, i, 共){
@@ -1160,6 +1189,93 @@ function gotoMaster(i, 帶到畫像){
     window.scrollTo({top:0, behavior:"smooth"});
   }
 }
+
+
+/* 點「遇到的人」會跳出這個人的資料。
+   **我們沒有他們的生平，也不可以自己寫**——所以這一層只放兩種東西：
+   ①他出現在哪幾段原典（原文逐字照搬，附祖師、站次、出處）
+   ②祖師檔案「交集人物」裡關於他的那幾條
+   如果他本身就是站上收錄的祖師，給一個按鈕直接過去看他的生平。 */
+function 別名JS(p){
+  const s = new Set([p.介面名]);
+  (p.各書異寫 || []).forEach(v => s.add(String(v).replace(/（.*?）/g, "").trim()));
+  // 原典裡的簡稱與敬稱（達磨／臨濟祖／風穴沼禪師），每一個都在原典查得到，出處記在資料檔
+  (p.別稱 || []).forEach(v => s.add(v.稱));
+  if(p.介面名.length === 4){ s.add(p.介面名.slice(0,2)); s.add(p.介面名.slice(2)); }
+  s.delete("");
+  return s;
+}
+function 找祖師(名){
+  return DATA.祖師.findIndex(p => (p.站||[]).length && 別名JS(p).has(名));
+}
+
+function 這個人出現在哪(名){
+  const 段 = [];
+  DATA.祖師.forEach((p,pi)=>{
+    (p.站||[]).forEach((st,si)=>{
+      if((st.人||[]).indexOf(名) >= 0)
+        段.push({祖師:p.介面名, 站:si+1, 地:st.地, 原文:st.原文, 出處:st.出處});
+    });
+  });
+  const 條 = [];
+  const F = (PROFILES && PROFILES.祖師檔案) || {};
+  Object.keys(F).forEach(名2=>{
+    (F[名2].交集人物 || []).forEach(c=>{
+      if(c.姓名 === 名) 條.push({祖師:名2, 身分:c.身分, 原文:c.原文, 出處:c.出處});
+    });
+  });
+  return {段, 條};
+}
+
+function 出處文(src){
+  return esc(src.書名) + "　卷" + src.卷 + "　" + esc(src.經號);
+}
+
+function 開人物(名){
+  const i = 找祖師(名);
+  const {段, 條} = 這個人出現在哪(名);
+  const 身分 = (條.find(c=>c.身分) || {}).身分 || "";
+  let h = '<button class="whoclose" id="whoClose" aria-label="關閉">×</button>'
+    + '<h3>' + esc(名) + '</h3>'
+    + (身分 ? '<div class="sub">' + esc(身分) + '</div>' : '')
+    + (i >= 0 ? '<button class="gobtn" data-go="' + i + '">看 '
+                + esc(DATA.祖師[i].介面名) + ' 的生平　›</button>' : '');
+  if(條.length){
+    h += '<div class="sec">原典怎麼記他</div>';
+    條.forEach(c=>{
+      h += '<div class="item"><div class="where">' + esc(c.祖師) + '　檔案</div>'
+        + '<div class="q">' + esc(c.原文) + '</div>'
+        + '<div class="src">' + 出處文(c.出處) + '</div></div>';
+    });
+  }
+  if(段.length){
+    h += '<div class="sec">他出現在這幾站</div>';
+    段.forEach(x=>{
+      h += '<div class="item"><div class="where">' + esc(x.祖師) + '　第 ' + x.站 + ' 站'
+        + (x.地 ? '　' + esc(x.地) : '') + '</div>'
+        + '<div class="q">' + esc(x.原文) + '</div>'
+        + '<div class="src">' + 出處文(x.出處) + '</div></div>';
+    });
+  }
+  if(!條.length && !段.length)
+    h += '<div class="sec">這個名字目前只出現在這一站。</div>';
+  el("whocard").innerHTML = h;
+  el("whobox").classList.add("on");
+}
+
+el("whobox").addEventListener("click", e=>{
+  const go = e.target.closest("[data-go]");
+  if(go){ el("whobox").classList.remove("on"); gotoMaster(+go.dataset.go, true); return; }
+  if(e.target.closest("#whoClose") || e.target === el("whobox"))
+    el("whobox").classList.remove("on");
+});
+document.addEventListener("click", e=>{
+  const t = e.target.closest(".wtag");
+  if(t) 開人物(t.dataset.n);
+});
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape") el("whobox").classList.remove("on");
+});
 
 /* 畫像放大 */
 document.addEventListener("click", e=>{
