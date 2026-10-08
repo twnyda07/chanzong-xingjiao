@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>禪宗．祖師行腳</title>
+<title>祖師跑江湖</title>
 <style>
   :root{
     /* 護目大字：底色不刺眼但有實體感，字色夠黑，對比拉開 */
@@ -13,7 +13,20 @@
     font-size:22px; line-height:2.0;}
   .wrap{max-width:1040px; margin:0 auto; padding:0 24px;}
 
-  header{padding:46px 0 22px; text-align:center;}
+  /* 配樂開關。**預設靜音**，而且不自動播放——公開網站自動出聲會嚇到人，
+     瀏覽器也多半會擋。使用者自己按才播。 */
+  .bgm{position:absolute; right:0; top:52px; display:flex; align-items:center; gap:7px;
+    font-size:14.5px; color:var(--ink2); background:none; border:1px solid var(--rule);
+    border-radius:999px; padding:5px 14px; cursor:pointer; font-family:inherit;
+    letter-spacing:1px; transition:.25s;}
+  .bgm:hover{border-color:var(--ink2);}
+  .bgm.on{border-color:var(--c); color:var(--c);}
+  .bgm i{font-style:normal; width:7px; height:7px; border-radius:50%;
+    background:var(--rule); transition:.25s;}
+  .bgm.on i{background:var(--c);}
+  @media(max-width:700px){ .bgm{position:static; margin:0 auto 10px;} }
+
+  header{padding:46px 0 22px; text-align:center; position:relative;}
   h1{font-size:46px; margin:0 0 6px; letter-spacing:8px;}
   header .sub{color:var(--ink2); font-size:21px; letter-spacing:3px;}
 
@@ -329,7 +342,9 @@
 
 <div class="wrap">
 <header>
-  <h1>禪宗．祖師行腳</h1>
+  <h1>祖師跑江湖</h1>
+  <button class="bgm" id="bgm" aria-pressed="false"><i></i>配樂　關</button>
+  <audio id="bgmAudio" loop preload="none" src="配樂.m4a"></audio>
 </header>
 
 <div id="hero"></div>
@@ -379,7 +394,8 @@
 <div class="foot">
   實心圓點的位置取自<strong>哈佛・復旦中國歷史地理資訊系統</strong>，依各祖師在世年份查得的治所座標；
   虛線圓點尚未定位。今日的省市仍待補。<br>
-  畫面上的引文逐字取自原典，建置時以程式與原典逐字比對，對不上不給編。
+  畫面上的引文逐字取自原典，建置時以程式與原典逐字比對，對不上不給編。<br>
+  配樂以 GarageBand 隨附的 Apple Loops 自行混成，預設不播放。
   <details id="srcList"><summary>這一位用到的出處</summary><ul id="srcUl"></ul></details>
 </div>
 </div>
@@ -1225,6 +1241,25 @@ el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第�
 
 // 標題下原本那排名字已經移除——法脈樹本身就把每一位列出來了，再列一次是重複，
 // 而且名字一多就會換行成一團。
+// 配樂：預設靜音、不自動播放，按了才開
+(function(){
+  const b = el("bgm"), a = el("bgmAudio");
+  if(!b || !a) return;
+  b.addEventListener("click", ()=>{
+    if(a.paused){
+      a.volume = 0.5;
+      a.play().then(()=>{
+        b.classList.add("on"); b.setAttribute("aria-pressed","true");
+        b.innerHTML = '<i></i>配樂　開';
+      }).catch(()=>{ b.innerHTML = '<i></i>配樂　播不出來'; });
+    } else {
+      a.pause();
+      b.classList.remove("on"); b.setAttribute("aria-pressed","false");
+      b.innerHTML = '<i></i>配樂　關';
+    }
+  });
+})();
+
 mi = 讀回選擇();                       // 重載後回到原本在看的那一位，不要默默跳回達摩
 renderMasters(); renderLines(); renderMap(); setMode("map");
 // 上一頁／下一頁換了網址裡的名字也要跟著換人
