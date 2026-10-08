@@ -22,14 +22,16 @@
   .m .face{width:68px; height:82px; margin:0 auto 9px; border-radius:36px 36px 30px 30px;
      background:linear-gradient(180deg,#efebe3,#e3ded4); display:flex; align-items:center;
      justify-content:center; color:#b3aa9c; font-size:13px; transition:.4s; overflow:hidden;}
-  .m .face.pic{background:#efece5; cursor:zoom-in;}
+  .m .face.pic{background:#efece5;}
+  .m{cursor:pointer;}
   .m .face.pic::after{content:"看畫像"; position:absolute; left:0; right:0; bottom:0;
     background:rgba(26,23,20,.62); color:#fff; font-size:13px; line-height:22px;
     opacity:0; transition:.25s;}
   .m .face{position:relative;}
   .m:hover .face.pic::after{opacity:1;}
-  @keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(47,92,143,0);}
-    30%{box-shadow:0 0 0 6px rgba(47,92,143,.28);}}
+  @keyframes flash{0%{box-shadow:0 0 0 0 rgba(47,92,143,0); background:var(--card);}
+    25%{box-shadow:0 0 0 8px rgba(47,92,143,.30); background:#e9f0f7;}
+    100%{box-shadow:0 0 0 0 rgba(47,92,143,0); background:var(--card);}}
   .gallery.flash{animation:flash 1.3s ease-out;}
   .m .face.pic img{width:100%; height:100%; object-fit:cover; object-position:50% 42%;
      filter:saturate(.9);}
@@ -39,6 +41,9 @@
     border:1px solid var(--rule); border-radius:8px;}
   .gtitle{font-size:21px; margin-bottom:16px;}
   .gtitle s{font-size:16px; color:#8c8273;}
+  .gallery.nopic{background:#f0ece3; border-style:dashed;}
+  .nopicmsg{margin:0; font-size:19px; color:var(--ink2); line-height:1.95;}
+  .nopicmsg b{color:var(--ink); font-weight:normal;}
   .gallery .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:20px;}
   .gallery figure{margin:0;}
   .gallery .zoom{display:block; width:100%; padding:0; border:0; background:none; cursor:zoom-in;}
@@ -779,7 +784,14 @@ el("lines") && el("lines").addEventListener("click", e=>{
 function renderGallery(){
   const p = DATA.祖師[mi];
   const pks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
-  if(!pks.length){ el("gallery").innerHTML = ""; return; }
+  if(!pks.length){
+    el("gallery").innerHTML = '<div class="gallery nopic"><div class="gtitle">'
+      + esc(p.介面名) + '　現存畫像 0 幅</div>'
+      + '<p class="nopicmsg">查遍博物館公有領域藏品，目前找不到<b>可以確定畫的就是他</b>的畫像。'
+      + '有幾張傳為他的像，但沒有榜題、沒有館藏、來源不明，'
+      + '掛上去等於指錯人，所以這裡留白。</p></div>';
+    return;
+  }
   el("gallery").innerHTML = '<div class="gallery"><div class="gtitle">'
     + esc(p.介面名) + '　現存畫像 ' + pks.length + ' 幅　<s>點圖放大，下面有館藏出處與連結</s></div>'
     + '<div class="grid">'
@@ -847,15 +859,22 @@ function gotoMaster(i, 帶到畫像){
   mi = i; step = 0; cur = -1; 回看 = -1;
   renderMasters(); renderMap(); renderPanel(); renderHowto();
   if(帶到畫像){
-    // 點頭像就是想看畫像。畫面要自己跑過去，不然會以為壞掉沒反應。
-    requestAnimationFrame(()=>{
-      const g = el("gallery").querySelector(".gallery") || el("gallery");
-      if(!g) { window.scrollTo({top:0, behavior:"smooth"}); return; }
-      const y = g.getBoundingClientRect().top + window.scrollY - 24;
-      window.scrollTo({ top:y, behavior:"smooth" });
+    // 點卡片就是想看這位的畫像。要讓人**立刻看得出有反應**，
+    // 所以閃光同步觸發，不等下一影格。
+    (function(){
+      const g = el("gallery").querySelector(".gallery");
+      if(!g) return;
+      const box = g.getBoundingClientRect();
+      // 已經整個在視窗內就不要亂捲，只閃；沒看到才捲過去
+      const 看得到 = box.top >= 0 && box.bottom <= window.innerHeight;
+      if(!看得到){
+        window.scrollTo({ top: box.top + window.scrollY - 20, behavior:"smooth" });
+      }
+      g.classList.remove("flash");
+      void g.offsetWidth;                  // 重設動畫，連點同一位也會再閃
       g.classList.add("flash");
-      setTimeout(()=>g.classList.remove("flash"), 1400);
-    });
+      setTimeout(()=>g.classList.remove("flash"), 1500);
+    })();
   } else {
     window.scrollTo({top:0, behavior:"smooth"});
   }
@@ -881,8 +900,7 @@ document.addEventListener("keydown", e=>{
 
 el("masters").addEventListener("click", e=>{
   const m = e.target.closest(".m"); if(!m || m.classList.contains("todo")) return;
-  const 點到畫像 = !!e.target.closest(".face");
-  gotoMaster(+m.dataset.i, 點到畫像);
+  gotoMaster(+m.dataset.i, true);   // 點卡片任何地方都帶到畫像區，不是只有點頭像
 });
 function pick(i){
   if(mode==="map"){ cur = i; }
