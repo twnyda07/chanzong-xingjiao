@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>禪宗．祖師行腳</title>
 <style>
   :root{
@@ -94,11 +95,18 @@
 
   .mapbox{background:#f7f5f1; border:1px solid var(--rule); border-radius:8px;
     position:relative; height:520px;}
-  /* 查不到座標的地名不要漂在海上，收進底下這條帶子 */
-  .mapbox.hasband::after{content:"以下地名尚未定位"; position:absolute; left:0; right:0;
-    bottom:0; height:62px; background:#f1eee8; border-top:1px dashed var(--rule);
-    border-radius:0 0 8px 8px; font-size:12.5px; color:#a9a194; padding:5px 0 0 12px;}
-  .mapbox .spot.nogeo{z-index:2;}
+  /* 查不到座標的地名不要漂在海上。原本收在地圖框內底部一條帶子裡，
+     但圓點下方的地名標籤會掉出框外（2026-10-08 使用者指出）。
+     改成地圖**下面**獨立一條，用正常流排版、不做絕對定位，結構上就不可能溢出。 */
+  .nogeoband{margin-top:10px; background:#f1eee8; border:1px dashed var(--rule);
+    border-radius:8px; padding:9px 12px 11px;}
+  .nogeoband .cap{font-size:12.5px; color:#a9a194; margin:0 0 7px;}
+  .nogeoband .row{display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center;}
+  .nogeoband .spot{position:static; transform:none; display:inline-flex; align-items:center;
+    gap:7px; padding:2px 4px; text-align:left;}
+  .nogeoband .spot i{margin:0; flex:none;}
+  .nogeoband .spot b{position:static; transform:none; opacity:1; top:auto; left:auto;
+    background:none; padding:0; white-space:normal;}
   .mapbox svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .spot{position:absolute; transform:translate(-50%,-50%); background:none; border:0;
     font-family:inherit; cursor:pointer; text-align:center; padding:4px;}
@@ -265,6 +273,7 @@
 
 <div class="stage">
   <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
+    <div class="nogeoband" id="nogeoband" hidden></div>
     <div class="chips" id="chips"></div></div>
   <div class="panel" id="panel"><p class="hint">先選一位祖師</p></div>
 </div>
@@ -402,29 +411,32 @@ function renderMap(){
   const geo = geoLayout(nodes);
   const fallback = layout(nodes.length);
   const pts = nodes.map((_,i)=> (geo && geo[i]) ? geo[i] : null);
-  // 沒有座標的排在底部一條，明寫尚未定位
-  let k = 0;
   const 未定位 = pts.filter(p=>!p).length;
-  nodes.forEach((_,i)=>{ if(!pts[i]){
-    pts[i] = { x: 14 + (k*(72/Math.max(1,未定位-1||1))), y: 97.5, geo:false }; k++;
-  }});
-  el("mapbox").classList.toggle("hasband", 未定位 > 0);
   el("mapNote").textContent = geo
-    ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，虛線框的地名尚未定位。"
+    ? (未定位 ? "實心圓點是歷史地理系統定位的真實位置，地圖下面那條是尚未定位的地名。"
               : "圓點是歷史地理系統定位的真實位置。")
     : "這一位的地點尚未定位，圓點為示意排列。";
   const box = el("mapbox");
   box.querySelectorAll(".spot").forEach(n=>n.remove());
+  const band = el("nogeoband");
+  band.hidden = !未定位;
+  band.innerHTML = 未定位
+    ? '<p class="cap">以下地名尚未定位，排在地圖外面</p><div class="row"></div>' : "";
+  const row = band.querySelector(".row");
   nodes.forEach((s,i)=>{
     const b = document.createElement("button");
-    b.className = "spot" + (pts[i].geo ? "" : " nogeo");
-    b.style.left = pts[i].x+"%"; b.style.top = pts[i].y+"%";
+    b.className = "spot" + (pts[i] ? "" : " nogeo");
     b.dataset.i = i;
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const badge = (mode==="map" && s.事.length>1)
       ? '<em style="font-style:normal; font-size:13.5px; color:var(--ink2)">　'+s.事.length+' 件</em>' : "";
     b.innerHTML = '<i>' + ((mode==="map") ? "" : (i+1)) + '</i><b>'+esc(label)+badge+'</b>';
-    box.appendChild(b);
+    if(pts[i]){
+      b.style.left = pts[i].x+"%"; b.style.top = pts[i].y+"%";
+      box.appendChild(b);
+    } else {
+      row.appendChild(b);          // 地圖外面那條，不做絕對定位
+    }
   });
   // 底圖：海岸線與黃河、長江。座標是概略輪廓，只為了讓人認得出這是哪裡。
   const 海岸 = [[119.8,39.2],[121.0,38.0],[121.8,37.5],[120.3,36.0],[119.2,35.0],
@@ -444,7 +456,7 @@ function renderMap(){
       + '<text x="'+px(106.2).toFixed(1)+'" y="'+py(28.8).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">長江</text>'
     : "";
   // 連線
-  const gp = pts.filter(q=>q.geo);
+  const gp = pts.filter(q=>q && q.geo);
   const d = gp.map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" ");
   el("paths").innerHTML = 底圖 + '<path d="'+d+'" fill="none" stroke="'+p.色
     + '" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 1.6"/>';
@@ -454,39 +466,42 @@ function renderMap(){
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const n = (mode==="map" && s.事.length>1) ? '<span class="n">'+s.事.length+' 件</span>' : "";
     const sc = (mode==="map") ? "" : ' style="--sc:'+站色[i % 站色.length]+'"';
-    return '<button class="chip'+(pts[i].geo?"":" nogeo")+'"'+sc+' data-i="'+i+'">'
+    return '<button class="chip'+(pts[i]?"":" nogeo")+'"'+sc+' data-i="'+i+'">'
       + ((mode==="map") ? "" : '<span class="no">'+(i+1)+'</span>')
       + esc(label) + n + '</button>';
   }).join("");
   paintSpots();
+  fitLabels();
   renderSources();
   renderGallery();
   renderProfile();
 }
 
-/* 標籤避讓：撞到就把字翻到點的上方，再撞就往下拉開。
-   只動標籤的排版，圓點位置（也就是座標）完全不動。 */
-function decollide(){
-  const sp = [...document.querySelectorAll(".spot")];
-  sp.forEach(b=>b.classList.remove("up","far"));
-  const box = () => sp.map(b=>b.getBoundingClientRect());
-  const modes = ["up", "lft", "rgt"];
-  for(let pass=0; pass<3; pass++){
-    const r = box();
-    for(let i=0;i<sp.length;i++){
-      for(let j=i+1;j<sp.length;j++){
-        const a=r[i], c=r[j];
-        const hit = !(a.right < c.left || c.right < a.left ||
-                      a.bottom < c.top || c.bottom < a.top);
-        if(hit){
-          const t = sp[j];
-          if(!modes.some(m=>t.classList.contains(m))) t.classList.add(modes[pass % 3]);
-          else { t.classList.remove("up","lft","rgt"); t.classList.add(modes[(pass+1) % 3]); }
-        }
-      }
-    }
-  }
+/* 地名標籤不可以掉出地圖框（2026-10-08 使用者指出的 bug）。
+   地圖邊緣的站，標籤會往左右溢出；最底下的站，標籤會往下溢出。
+   這裡逐站量實際寬高，撞到哪一邊就把標籤推回框內；靠下的就翻到圓點上方。
+   **只動標籤的排版，圓點位置（也就是座標）一點都不動。**
+   加新祖師、改字級、換視窗寬度都會重算，不必再手動調數字。 */
+function fitLabels(){
+  const box = el("mapbox").getBoundingClientRect();
+  if(!box.width) return;                       // 還沒排版（例如整區隱藏）就不量
+  el("mapbox").querySelectorAll(".spot").forEach(sp=>{
+    const b = sp.querySelector("b"); if(!b) return;
+    b.style.left = ""; b.style.top = ""; b.style.bottom = "";
+    const base = sp.getBoundingClientRect();
+    const 中 = base.left + base.width/2;        // 標籤預設置中在圓點上
+    let r = b.getBoundingClientRect();
+    // 左右：推回框內，留 3px 邊
+    let 推 = 0;
+    if(r.left < box.left + 3) 推 = (box.left + 3) - r.left;
+    else if(r.right > box.right - 3) 推 = (box.right - 3) - r.right;
+    if(推) b.style.left = (base.width/2 + 推) + "px";
+    // 上下：標籤本來在圓點下方，掉出框底就翻到圓點上方
+    r = b.getBoundingClientRect();
+    if(r.bottom > box.bottom - 3){ b.style.top = "auto"; b.style.bottom = "24px"; }
+  });
 }
+addEventListener("resize", fitLabels);
 
 function paintSpots(){
   document.querySelectorAll(".chip").forEach((c,i)=>{
@@ -496,7 +511,9 @@ function paintSpots(){
     c.classList.toggle("done", mode!=="map" && i < step);
     c.disabled = (mode!=="map" && i > step);
   });
-  document.querySelectorAll(".spot").forEach((b,i)=>{
+  // 未定位的站現在排在地圖外面那條，文件順序不等於站序，所以一律用 data-i，不用迴圈序號
+  document.querySelectorAll(".spot").forEach(b=>{
+    const i = +b.dataset.i;
     const geo = !b.classList.contains("nogeo");
     b.className = "spot" + (geo ? "" : " nogeo");
     if(mode==="map"){
@@ -854,9 +871,27 @@ function renderSources(){
   el("srcUl").innerHTML = Object.keys(seen).sort().map(k=>'<li>'+esc(k)+'</li>').join("");
 }
 
+/* 選了哪一位要記在網址裡。
+   使用者回報「先切過去，過一下又自己變回達摩」——程式裡沒有任何地方會把 mi 改回 0，
+   會變回第一位只有一種可能：**整頁重新載入**（手機或分頁切走後被瀏覽器回收再還原、
+   網路不穩重載、從書籤重開）。原本選擇只存在記憶體裡，一重載就沒了。
+   存進網址還有一個好處：可以直接把某一位的連結傳給別人。 */
+function 記住選擇(){
+  const 名 = DATA.祖師[mi].介面名;
+  // replaceState 不會捲動、也不會灌爆上一頁的歷史
+  history.replaceState(null, "", "#" + encodeURIComponent(名));
+}
+function 讀回選擇(){
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+  if(!h) return 0;
+  const i = DATA.祖師.findIndex(p => p.介面名 === h && (p.站||[]).length);
+  return i < 0 ? 0 : i;
+}
+
 function gotoMaster(i, 帶到畫像){
   if(!(DATA.祖師[i].站||[]).length) return;
   mi = i; step = 0; cur = -1; 回看 = -1;
+  記住選擇();
   renderMasters(); renderMap(); renderPanel(); renderHowto();
   if(帶到畫像){
     // 點卡片就是想看這位的畫像。要讓人**立刻看得出有反應**，
@@ -912,6 +947,9 @@ function pick(i){
 el("mapbox").addEventListener("click", e=>{
   const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
 });
+el("nogeoband").addEventListener("click", e=>{      // 地圖外面那條也要能點
+  const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
+});
 el("chips").addEventListener("click", e=>{
   const c = e.target.closest(".chip"); if(c && !c.disabled) pick(+c.dataset.i);
 });
@@ -927,5 +965,8 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");      // 已在地圖模式時＝重設，面板回到提示
 el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第一站重走
 
+mi = 讀回選擇();                       // 重載後回到原本在看的那一位，不要默默跳回達摩
 renderMasters(); renderLines(); renderMap(); setMode("map");
+// 上一頁／下一頁換了網址裡的名字也要跟著換人
+addEventListener("hashchange", ()=>{ const i = 讀回選擇(); if(i !== mi) gotoMaster(i); });
 </script>
