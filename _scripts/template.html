@@ -17,6 +17,32 @@
   h1{font-size:46px; margin:0 0 6px; letter-spacing:8px;}
   header .sub{color:var(--ink2); font-size:21px; letter-spacing:3px;}
 
+  /* 首屏讓畫說話。四幅博物館公有領域古畫本來躺在摺線以下，首屏一張圖都沒有。
+     畫自己會提供顏色，介面就可以退到後面——這是看 Google Arts & Culture 唯一真正值得借的一點。
+     ⚠ 沒有畫像的祖師**不掛假圖**，改用純墨底；寧可留白也不要指錯人。 */
+  .hero{position:relative; margin:0 0 6px; border-radius:10px; overflow:hidden;
+    background:#1b1813; display:grid; grid-template-columns:1fr auto; gap:0; align-items:stretch;}
+  .hero .tx{padding:30px 26px; align-self:center;}
+  .hero .nm{font-size:40px; letter-spacing:7px; color:#f6f1e6; line-height:1.3;}
+  .hero .rt{margin-top:10px; font-size:16.5px; color:#cac1af; letter-spacing:1px; line-height:1.9;}
+  .hero .ct{margin-top:8px; font-size:15px; color:#978d7d; letter-spacing:1px;}
+  /* 古畫**整幅不裁**。立軸（397×900）裁成橫幅會只剩一角，而且把博物館藏品切成 banner
+     本身就不妥當。改成右邊一欄、contain 不裁，深底襯著，橫幅直幅都成立。 */
+  .hero .art{position:relative; width:212px; background:#13110d;
+    border-left:1px solid #2b261e; display:flex; align-items:center; justify-content:center;}
+  .hero .art img{max-width:100%; max-height:248px; display:block;}
+  .hero .cr{padding:9px 12px 11px; font-size:11.5px; color:#9a9080; line-height:1.7;
+    grid-column:1 / -1; border-top:1px solid #2b261e; background:#15130f;}
+  .hero.nopic{background:linear-gradient(100deg,#1b1813,#262117);}
+  @media(max-width:700px){
+    .hero{grid-template-columns:1fr;}
+    .hero .tx{padding:22px 18px 10px; order:2;}
+    .hero .nm{font-size:31px;}
+    .hero .art{width:auto; order:1; border-left:0; border-bottom:1px solid #2b261e; padding:14px 0;}
+    .hero .art img{max-height:210px;}
+    .hero .cr{order:3;}   /* 不設 order 會跑到畫的上面去 */
+  }
+
   /* 入口＝一棵法脈樹，不是一排頭像。
      六個人可以並排，六百個人不行——頭像並列到後面會變成一牆臉（使用者 2026-10-08 指出）。
      樹是縱向的，一代一節；分枝時才並排。加幾百位只是往下長，版面不會垮。
@@ -111,7 +137,10 @@
   .stage{display:grid; grid-template-columns:1.1fr 1fr; gap:18px; align-items:start;}
   @media (max-width:760px){ .stage{grid-template-columns:1fr;} }
 
-  .mapbox{background:#f7f5f1; border:1px solid var(--rule); border-radius:8px;
+  /* 地圖改深底。原本 #f7f5f1 跟紙底 #f4f1ea 只差 1.04:1——整站最重要的那塊東西，
+     在畫面上幾乎看不出是一塊東西（2026-10-08 量過，使用者說「排版及顏色不吸引人」）。
+     底色不動（紙色是定案的），但地圖這一塊要有自己的份量，圓點與路線才亮得起來。 */
+  .mapbox{background:#232019; border:1px solid #2f2a22; border-radius:8px;
     position:relative; height:520px;}
   /* 查不到座標的地名不要漂在海上。原本收在地圖框內底部一條帶子裡，
      但圓點下方的地名標籤會掉出框外（2026-10-08 使用者指出）。
@@ -128,23 +157,22 @@
   .mapbox svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .spot{position:absolute; transform:translate(-50%,-50%); background:none; border:0;
     font-family:inherit; cursor:pointer; text-align:center; padding:4px;}
-  .spot i{display:block; width:18px; height:18px; border-radius:50%; background:#d9d3c8;
+  .spot i{display:block; width:18px; height:18px; border-radius:50%; background:#796e5a;
     margin:0 auto 5px; transition:.35s;}
   .spot b{font-size:17px; font-weight:normal; color:var(--ink2); transition:.3s; white-space:nowrap;}
   .spot i{font-style:normal; font-size:11.5px; line-height:18px; color:transparent;
     text-align:center; font-family:inherit;}
   .spot.lit i{background:var(--sc, var(--c)); color:#fff;
     box-shadow:0 0 0 7px color-mix(in srgb, var(--sc, var(--c)) 20%, transparent);}
-  .spot.lit b{color:var(--sc, var(--c));}
+  .spot.lit b, .spot.next b{color:#fff;}   /* 深底上讓圓點帶顏色，字維持高可讀 */
   .spot.cur i{box-shadow:0 0 0 10px color-mix(in srgb, var(--sc, var(--c)) 30%, transparent);}
   .spot.next i{border:2px solid var(--sc, var(--c)); background:#fff;
     color:var(--sc, var(--c)); line-height:14px; animation:pulse 1.6s infinite;}
-  .spot.next b{color:var(--sc, var(--c));}
   .spot.dim{opacity:.45;}
   /* 地圖上只放圓點，地名放在下面那排大字籤，從根本上不會互相壓字 */
   .spot b{opacity:0; transition:.25s; position:absolute; left:50%;
-          transform:translateX(-50%); top:24px; background:var(--paper);
-          padding:1px 6px; border-radius:4px;}
+          transform:translateX(-50%); top:24px; background:rgba(16,14,11,.88);
+          color:#ece4d4; padding:2px 8px; border-radius:4px;}
   /* 只顯示「正在看的這一站」與「下一站」的地名。其餘靠點上的編號與下方籤列辨識，
      否則同一個地方的好幾站會把地名疊成一團。 */
   .spot.cur b, .spot:hover b, .spot:focus b{opacity:1; pointer-events:auto;}
@@ -200,8 +228,8 @@
   .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
     background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
-  .spot.nogeo:not(.lit):not(.next) i{background:#efece5; border:1px dashed #c9c2b4;}
-  .spot.nogeo:not(.lit):not(.next) b{color:#9b9387;}
+  .nogeoband .spot.nogeo:not(.lit):not(.next) i{background:#efece5; border:1px dashed #c9c2b4;}
+  .nogeoband .spot b{color:var(--ink); background:none;}
   .spot.nogeo.lit i{border:1px dashed #fff;}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent);}
     50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--c) 0%,transparent);}}
@@ -290,6 +318,7 @@
   <h1>禪宗．祖師行腳</h1>
 </header>
 
+<div id="hero"></div>
 <div class="masters" id="masters"></div>
 
 <div id="gallery"></div>
@@ -518,11 +547,11 @@ function renderMap(){
     [116.0,29.9],[117.6,30.6],[118.8,31.2],[119.6,31.8],[120.6,31.9],[121.6,31.4]];
   const line = a => a.map((c,i)=>(i?"L":"M")+px(c[0]).toFixed(1)+" "+py(c[1]).toFixed(1)).join(" ");
   const 底圖 = geo
-    ? '<path d="'+line(海岸)+'" fill="none" stroke="#c9c2b4" stroke-width=".7"/>'
-      + '<path d="'+line(黃河)+'" fill="none" stroke="#b9c6cf" stroke-width=".9"/>'
-      + '<path d="'+line(長江)+'" fill="none" stroke="#b9c6cf" stroke-width="1.1"/>'
-      + '<text x="'+px(109.5).toFixed(1)+'" y="'+py(37.2).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">黃河</text>'
-      + '<text x="'+px(106.2).toFixed(1)+'" y="'+py(28.8).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">長江</text>'
+    ? '<path d="'+line(海岸)+'" fill="none" stroke="#7a6d5a" stroke-width=".8"/>'
+      + '<path d="'+line(黃河)+'" fill="none" stroke="#557383" stroke-width="1"/>'
+      + '<path d="'+line(長江)+'" fill="none" stroke="#557383" stroke-width="1.2"/>'
+      + '<text x="'+px(109.5).toFixed(1)+'" y="'+py(37.2).toFixed(1)+'" font-size="2.4" fill="#8fa3ad">黃河</text>'
+      + '<text x="'+px(106.2).toFixed(1)+'" y="'+py(28.8).toFixed(1)+'" font-size="2.4" fill="#8fa3ad">長江</text>'
     : "";
   目前底圖 = 底圖; 目前點 = pts;
   el("paths").setAttribute("viewBox","0 0 100 100");
@@ -539,6 +568,7 @@ function renderMap(){
   paintSpots();                // paintSpots 收尾會重畫路線
   fitLabels();
   renderSources();
+  renderHero();
   renderGallery();
   renderProfile();
 }
@@ -895,6 +925,25 @@ el("lines") && el("lines").addEventListener("click", e=>{
 
 /* 只動顯示，不動資料：在已渲染的引文裡把選中的字包起來 */
 
+
+/* 首屏那幅畫。**副標只由真實資料組出來**：原典寫出來的地名、站數、件數、館藏出處，
+   一個字都不自己編（鐵律零）。沒有畫像的就走純墨底，不掛假圖。 */
+function renderHero(){
+  const p = DATA.祖師[mi];
+  const k = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : null;
+  const m = k ? PICS[k] : null;
+  const 地 = [];
+  (p.站 || []).forEach(s => { if(s.地 && 地[地.length-1] !== s.地) 地.push(s.地); });
+  const 路 = 地.slice(0, 4).map(esc).join("　→　") + (地.length > 4 ? "　→　…" : "");
+  const 件 = (p.站 || []).length;
+  el("hero").innerHTML = '<div class="hero'+(m ? '' : ' nopic')+'">'
+    + '<div class="tx"><div class="nm">'+esc(p.介面名)+'</div>'
+    + (路 ? '<div class="rt">'+路+'</div>' : '')
+    + '<div class="ct">'+stations().length+' 站　'+件+' 件事</div></div>'
+    + (m ? '<div class="art"><img src="畫像/'+k+'.jpg" alt=""></div>' : '')
+    + (m ? '<div class="cr">'+esc(m.館藏)+(m.年代 ? '　'+esc(m.年代) : '')+'　'+esc(m.授權)+'</div>' : '')
+    + '</div>';
+}
 
 function renderGallery(){
   const p = DATA.祖師[mi];
