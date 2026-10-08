@@ -1257,9 +1257,11 @@ el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第�
         b.classList.add("on"); b.setAttribute("aria-pressed","true");
         b.innerHTML = '<i></i>配樂　開';
       }).catch(err=>{
-        const 碼 = {1:"被中止", 2:"網路讀不到", 3:"檔案解不開", 4:"這個瀏覽器不支援"};
-        const 因 = (a.error && 碼[a.error.code]) || (err && err.name === "NotAllowedError"
-                   ? "瀏覽器擋住了" : "播不出來");
+        // 「播不出來」三個字等於什麼都沒說，回報時無從查起。一定要留下可定位的線索。
+        const 碼 = {1:"被中止", 2:"網路讀不到", 3:"檔案解不開", 4:"格式不支援"};
+        const 因 = (a.error && 碼[a.error.code])
+                 || (err && err.name === "NotAllowedError" ? "瀏覽器擋住了" : null)
+                 || (err && err.name ? err.name : "不明");
         b.innerHTML = '<i></i>配樂　' + 因;
       });
     } else {
