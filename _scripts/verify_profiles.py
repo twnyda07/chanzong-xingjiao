@@ -9,11 +9,13 @@
 """
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 PROF = os.path.join(ROOT, "_data", "祖師檔案.json")
+DATA = os.path.join(ROOT, "_data", "祖師.json")
 CANON = os.path.join(ROOT, "_data", "原典")
 
 PUNCT = "。，、；：？！「」『』（）〔〕《》〈〉…—·　 \n\t\r"
@@ -67,11 +69,28 @@ def main():
         sys.exit(1)
     data = json.load(open(PROF, encoding="utf-8"))
     errors, n = [], 0
+    # 各書異寫要從 祖師.json 拿，不然「慧能」這種換字的自我指涉會溜過去
+    別 = {}
+    try:
+        for x in json.load(open(DATA, encoding="utf-8"))["祖師"]:
+            s = {x["介面名"]}
+            for v in x.get("各書異寫") or []:
+                s.add(re.sub(r"（.*?）", "", v).strip())
+            if len(x["介面名"]) == 4:
+                s.update({x["介面名"][:2], x["介面名"][2:]})
+            別[x["介面名"]] = {a for a in s if a}
+    except Exception:  # noqa: BLE001
+        pass
+
     for 名, p in data.get("祖師檔案", {}).items():
         for 節 in ("生平", "參學歷程", "開悟因緣", "教學風格", "歷史定位", "交集人物"):
             for i, 條 in enumerate(p.get(節, []), 1):
                 n += 1
                 check(條, "%s．%s 第%d條" % (名, 節, i), errors)
+                # 交集人物不可以是他自己（比照 verify.py 的「遇到的人」那條）
+                if 節 == "交集人物" and 條.get("姓名") in 別.get(名, set()):
+                    errors.append("%s．交集人物 第%d條：姓名寫了「%s」，那是他自己"
+                                  % (名, i, 條.get("姓名")))
 
     print("── 祖師檔案 第零條檢查 ──")
     print("已檢查 %d 條，涵蓋 %d 個原典卷次" % (n, len(_c)))

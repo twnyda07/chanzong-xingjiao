@@ -34,6 +34,21 @@ def _subseq(needle, hay):
     return i == len(needle)
 
 
+def 別名(p):
+    """這一位在各書裡的寫法，加上四字法號拆出來的兩截。
+
+    景德作「慧能」、壇經作「惠能」、續高僧傳作「僧可」；臨濟義玄也會被寫成「臨濟」或「義玄」。
+    只比對介面名會讓換個字的自我指涉溜過去。
+    """
+    s = {p["介面名"]}
+    for v in p.get("各書異寫") or []:
+        s.add(re.sub(r"（.*?）", "", v).strip())
+    n = p["介面名"]
+    if len(n) == 4:
+        s.update({n[:2], n[2:]})
+    return {a for a in s if a}
+
+
 def rare_chars(s):
     """擴充區罕用字：播放端常缺字型，會變成方框。"""
     out = []
@@ -50,8 +65,26 @@ def main():
     errors, warns, checked = [], [], 0
 
     for p in data["祖師"]:
+        自己 = 別名(p)
         for idx, st in enumerate(p.get("站", []), 1):
             where = "%s 第%d站（%s）" % (p["介面名"], idx, st.get("地", "?"))
+
+            # 「遇到的人」不可以是他自己（2026-10-08 使用者抓到：惠能第10站遇到惠能）。
+            # **要完全同名才算**——「惠能嚴父」是他父親，是另一個人，不可以一起擋掉。
+            # 事實欄位不可以夾括號註解。「居士（後名僧璨）」那個括號是我加的話，
+            # 不是原典的字——第零條說畫面上只能有原典原文與事實標註，沒有轉述的位置。
+            for 欄, 值 in [("地", st.get("地")), ("年", st.get("年"))] + \
+                          [("人", w) for w in (st.get("人") or [])]:
+                if 值 and re.search(r"[（(][^）)]*[）)]", 值):
+                    errors.append("%s：%s 欄「%s」夾了括號註解，那是轉述不是原典的字"
+                                  % (where, 欄, 值))
+
+            for who in st.get("人") or []:
+                if who in 自己:
+                    errors.append("%s：遇到的人寫了「%s」，那是他自己" % (where, who))
+                elif any(who.startswith(a) and who != a for a in 自己):
+                    warns.append("%s：遇到的人「%s」以他自己的名號開頭，確認是別人才留"
+                                 % (where, who))
             src = st["出處"]
             key = "%s_j%02d" % (src["經號"], src["卷"])
             if key not in cache:
