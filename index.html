@@ -333,6 +333,7 @@ const ERAS = {"說明":"年號 → 西元的換算表。這些**不是原典明�
 const PICS = {"03":{"祖師":"達摩","說明":"達摩頂相","標題":"Bodhidharma（菩提達磨図）","館藏":"克里夫蘭美術館 The Cleveland Museum of Art","年代":"1500年代前中期（日本室町時代），傳 Unkei Eii（雲溪永怡）筆","授權":"CC0","詳目網址":"https://clevelandart.org/art/2015.472"},"02":{"祖師":"慧可","說明":"達摩面壁，身旁為慧可","標題":"Bodhidharma Meditating Facing a Cliff（達磨面壁）","館藏":"克里夫蘭美術館 The Cleveland Museum of Art","年代":"1200年代晚期（南宋）","授權":"CC0","詳目網址":"https://clevelandart.org/art/1972.41"},"04":{"祖師":"道信","說明":"道信與童子相遇，童子即後來的弘忍","標題":"The Second Coming of the Fifth Patriarch（五祖再來圖）","館藏":"克里夫蘭美術館 The Cleveland Museum of Art","年代":"約1300年代中期（元代），因陀羅（Yintuoluo，約1285–約1355）筆","授權":"CC0","詳目網址":"https://clevelandart.org/art/1967.211"},"00":{"祖師":"達摩","說明":"達摩蘆葉渡江","標題":"Bodhidharma Crossing the Yangzi on a Reed（蘆葉達磨圖）","館藏":"克里夫蘭美術館 The Cleveland Museum of Art","年代":"1300年代（元代）","授權":"CC0（館方 share_license_status 欄位明載 CC0，copyright 欄為空）","詳目網址":"https://clevelandart.org/art/1964.44"},"04b":{"祖師":"弘忍","說明":"畫中合掌的童子，即後來的弘忍（與道信同一幅）","標題":"The Second Coming of the Fifth Patriarch（五祖再來圖）","館藏":"克里夫蘭美術館 The Cleveland Museum of Art","年代":"約1300年代中期（元代），因陀羅（Yintuoluo，約1285–約1355）筆","授權":"CC0","詳目網址":"https://clevelandart.org/art/1967.211"},"06":{"祖師":"惠能","說明":"畫面左上榜題「慧能大師」四字清晰，為本幅自題，不是後人指認","標題":"大理國描工張勝溫畫梵像．第044–049開「禪宗六祖像」（本站取最左一尊）","館藏":"國立故宮博物院（臺北），典藏號 故畫001003N000000000；張勝溫繪，12世紀","年代":"12世紀（大理國）","授權":"公有領域（維基共享資源 PD-Art／PD-old-100）","詳目網址":"https://commons.wikimedia.org/wiki/File:%E5%A4%A7%E7%90%86%E5%9C%8B%E6%8F%8F%E5%B7%A5%E5%BC%B5%E5%8B%9D%E6%BA%AB%E7%95%AB%E6%A2%B5%E5%83%8F-%E7%AC%AC044-049%E9%96%8B-%E7%A6%85%E5%AE%97%E5%85%AD%E7%A5%96%E5%83%8F.png"},"_僧璨為何沒有畫像":{"祖師":"（說明，不顯示）","說明":"同一幅《禪宗六祖像》裡僧璨應該也在，但那一區有兩欄榜題擠在一起，一欄可讀出「璨」、鄰欄以「可」收尾，無法確定哪一欄配哪一尊。依本站的規矩，指認不了就不掛——寧可空著，不要把別人的像標成僧璨。","標題":"","館藏":"","年代":"","授權":"","詳目網址":""},"_查過但指認不了":{"說明":"真的查遍博物館公有領域藏品、但指認不了的祖師名單。只有在這份名單裡的人，畫像區才會說「查遍…找不到」；不在名單裡的只說「還沒有查」——沒做過的事不可以說成做過。","名單":["僧璨"]}};
 const TREE = {"說明":"首頁的法脈骨架。每一條師承關係都要有原典依據，查不到依據的不畫。已建的節點連到 祖師.json 的介面名；還沒建的只出節點、標明還沒建，不編名字也不編世代。","分際":"「一花開五葉」出自達摩付法偈（T2076 卷3），但把「五葉」解作「五家」是後人的解釋，原偈沒有這樣說。本站只把法脈樹當導航骨架，不宣稱這個歷史論斷。","節點":[{"id":"達摩","名":"達摩","父":null,"狀態":"已建"},{"id":"慧可","名":"慧可","父":"達摩","狀態":"已建"},{"id":"僧璨","名":"僧璨","父":"慧可","狀態":"已建"},{"id":"道信","名":"道信","父":"僧璨","狀態":"已建"},{"id":"弘忍","名":"弘忍","父":"道信","狀態":"已建"},{"id":"惠能","名":"惠能","父":"弘忍","狀態":"已建"},{"id":"南嶽懷讓","名":"南嶽懷讓","父":"惠能","狀態":"還沒建","依據":{"經號":"T2076","書名":"景德傳燈錄","卷":5,"原文":"第三十三祖慧能大師法嗣四十三人"}},{"id":"青原行思","名":"青原行思","父":"惠能","狀態":"還沒建","依據":{"經號":"T2076","書名":"景德傳燈錄","卷":5,"原文":"吉州青原山行思禪師"}},{"id":"南嶽下一至三世","名":"南嶽下一世至三世","父":"南嶽懷讓","狀態":"還沒建","無名":true,"依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"南嶽下四世"}},{"id":"黃檗希運","名":"黃檗希運","父":"南嶽下一至三世","狀態":"還沒建","世標":"南嶽下四世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"南嶽下四世"}},{"id":"臨濟義玄","名":"臨濟義玄","父":"黃檗希運","狀態":"已建","世標":"南嶽下五世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"黃檗運禪師法嗣"}},{"id":"興化存獎","名":"興化存獎","父":"臨濟義玄","狀態":"已建","世標":"南嶽下六世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"臨濟玄禪師法嗣"}},{"id":"南院慧顒","名":"南院慧顒","父":"興化存獎","狀態":"已建","世標":"南嶽下七世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"興化獎禪師法嗣"}},{"id":"風穴延沼","名":"風穴延沼","父":"南院慧顒","狀態":"已建","世標":"南嶽下八世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"南院顒禪師法嗣"}},{"id":"首山省念","名":"首山省念","父":"風穴延沼","狀態":"已建","世標":"南嶽下九世","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"風穴沼禪師法嗣"}},{"id":"汾州善昭","名":"汾州善昭","父":"首山省念","狀態":"還沒建","依據":{"經號":"X1565","書名":"五燈會元","卷":11,"原文":"首山念禪師法嗣"}}]};
 let mi = 0, mode = "map", step = 0, cur = -1, 回看 = -1;
+let 目前底圖 = "", 目前點 = [];        // 給 drawPath 用：底圖與各站在地圖上的位置
 
 const el = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -395,6 +396,10 @@ function 節點卡(n){
   const p = i >= 0 ? DATA.祖師[i] : null;
   const has = !!(p && (p.站||[]).length);
   const 色 = p ? p.色 : "#6b645b";
+  // 「站／件事」使用者說用語怪，但 2026-10-08 指示**先留著**，等想到更好的再換。
+  // 換的時候要知道這兩個數字其實不同質：
+  //   站  ＝行程上的停留次數，回訪同一地會算兩次（弘忍、臨濟義玄、興化存獎、風穴延沼有）
+  //   件事＝原典段數，一段＝一段逐字引文
   const 腳 = has ? (stations(i).length + ' 站　' + p.站.length + ' 件事')
                  : '還沒建';
   return '<div class="node">'
@@ -506,13 +511,10 @@ function renderMap(){
       + '<text x="'+px(109.5).toFixed(1)+'" y="'+py(37.2).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">黃河</text>'
       + '<text x="'+px(106.2).toFixed(1)+'" y="'+py(28.8).toFixed(1)+'" font-size="2.4" fill="#aeb9c2">長江</text>'
     : "";
-  // 連線
-  const gp = pts.filter(q=>q && q.geo);
-  const d = gp.map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" ");
-  el("paths").innerHTML = 底圖 + '<path d="'+d+'" fill="none" stroke="'+p.色
-    + '" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 1.6"/>';
+  目前底圖 = 底圖; 目前點 = pts;
   el("paths").setAttribute("viewBox","0 0 100 100");
   el("paths").setAttribute("preserveAspectRatio","xMidYMid meet");
+  drawPath();
   el("chips").innerHTML = nodes.map((s,i)=>{
     const label = (mode==="map") ? s.地 : (s.地 || "（原典未載地點）");
     const n = (mode==="map" && s.事.length>1) ? '<span class="n">'+s.事.length+' 件</span>' : "";
@@ -521,7 +523,7 @@ function renderMap(){
       + ((mode==="map") ? "" : '<span class="no">'+(i+1)+'</span>')
       + esc(label) + n + '</button>';
   }).join("");
-  paintSpots();
+  paintSpots();                // paintSpots 收尾會重畫路線
   fitLabels();
   renderSources();
   renderGallery();
@@ -554,6 +556,37 @@ function fitLabels(){
 }
 addEventListener("resize", fitLabels);
 
+/* 走過的路要連起來（使用者 2026-10-08 要的）。
+   地圖模式：整條路線淡淡畫出來，那是「他這一生去過哪裡」的全景。
+   逐站模式：**只連已經點亮的那幾站**，點一站長一段；還沒走到的不畫，
+   不然一開始就把路攤在那裡，等於先把答案給人看。
+   沒有座標的站連不過去，那一段就斷開——硬連會憑空畫出一條不存在的直線。 */
+function 一段(d, 透明度, 虛線){
+  if(!d) return "";
+  return '<path d="'+d+'" fill="none" stroke="'+DATA.祖師[mi].色
+    + '" stroke-opacity="'+透明度+'" stroke-width="0.9"'
+    + ' stroke-linecap="round" stroke-linejoin="round"'
+    + (虛線 ? ' stroke-dasharray="'+虛線+'"' : '') + '/>';
+}
+function 連(qs){ return qs.map((q,i)=>(i?"L":"M")+q.x+" "+q.y).join(" "); }
+
+function drawPath(){
+  if(mode === "map"){
+    el("paths").innerHTML = 目前底圖
+      + 一段(連(目前點.filter(q=>q && q.geo)), ".3", "2 1.6");
+    return;
+  }
+  const 段 = [];
+  let 這段 = [];
+  for(let i=0; i<step && i<目前點.length; i++){
+    const q = 目前點[i];
+    if(q && q.geo){ 這段.push(q); }
+    else { if(這段.length>1) 段.push(這段); 這段 = []; }   // 未定位的站把路斷開
+  }
+  if(這段.length>1) 段.push(這段);
+  el("paths").innerHTML = 目前底圖 + 段.map(g=>一段(連(g), ".62", "")).join("");
+}
+
 function paintSpots(){
   document.querySelectorAll(".chip").forEach((c,i)=>{
     const 看 = (回看 >= 0 && 回看 < step) ? 回看 : step-1;
@@ -579,6 +612,7 @@ function paintSpots(){
       if(i === 看) b.classList.add("cur");
     }
   });
+  drawPath();     // 每點亮一站，走過的那段路就跟著長出來
 }
 
 /* 行腳距離：用 CHGIS 的治所座標算球面直線距離。
