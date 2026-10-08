@@ -20,35 +20,35 @@
   /* 首屏讓畫說話。四幅博物館公有領域古畫本來躺在摺線以下，首屏一張圖都沒有。
      畫自己會提供顏色，介面就可以退到後面——這是看 Google Arts & Culture 唯一真正值得借的一點。
      ⚠ 沒有畫像的祖師**不掛假圖**，改用純墨底；寧可留白也不要指錯人。 */
+  /* 最上方的 banner：輪播所有祖師的古畫。這些是博物館藏品，平常很難得看到，
+     所以讓畫佔主位、整幅不裁（立軸裁成橫幅會只剩一角，也不該把館藏裁成 banner）。 */
   .hero{position:relative; margin:0 0 6px; border-radius:10px; overflow:hidden;
-    background:#1b1813; display:grid; grid-template-columns:1fr auto; gap:0; align-items:stretch;}
-  .hero .tx{padding:30px 26px; align-self:center;}
+    background:#1b1813; display:grid; grid-template-columns:auto 1fr;
+    cursor:pointer; min-height:372px;}
+  .hero .art{position:relative; width:330px; background:#13110d; padding:16px;
+    border-right:1px solid #2b261e; display:flex; align-items:center; justify-content:center;}
+  .hero .art img{max-width:100%; max-height:330px; display:block;
+    position:absolute; opacity:0; transition:opacity 1s ease;}
+  .hero .art img.on{opacity:1; position:relative;}
+  .hero .tx{padding:28px 26px 34px; align-self:center;}
   .hero .nm{font-size:40px; letter-spacing:7px; color:#f6f1e6; line-height:1.3;}
   .hero .rt{margin-top:10px; font-size:16.5px; color:#cac1af; letter-spacing:1px; line-height:1.9;}
   .hero .ct{margin-top:8px; font-size:15px; color:#978d7d; letter-spacing:1px;}
-  /* 古畫**整幅不裁**。立軸（397×900）裁成橫幅會只剩一角，而且把博物館藏品切成 banner
-     本身就不妥當。改成右邊一欄、contain 不裁，深底襯著，橫幅直幅都成立。 */
-  .hero .art{position:relative; width:236px; background:#13110d; padding:0 16px;
-    border-left:1px solid #2b261e; display:flex; align-items:center; justify-content:center;}
-  /* 輪播：多幅疊著淡入淡出，一次只顯示一幅 */
-  .hero .art img{max-width:100%; max-height:242px; display:block;
-    position:absolute; opacity:0; transition:opacity .9s ease;}
-  .hero .art img.on{opacity:1; position:relative;}
-  .hero .art .dots{position:absolute; bottom:8px; left:0; right:0;
-    display:flex; justify-content:center; gap:7px;}
-  .hero .art .dot{width:7px; height:7px; border-radius:50%; padding:0;
+  .hero .dots{position:absolute; left:330px; right:0; bottom:40px;
+    display:flex; justify-content:center; gap:8px;}
+  .hero .dot{width:8px; height:8px; border-radius:50%; padding:0;
     border:1px solid #8c8373; background:none; cursor:pointer; transition:.25s;}
-  .hero .art .dot.on{background:#ded5c4; border-color:#ded5c4;}
-  .hero .cr{padding:9px 12px 11px; font-size:11.5px; color:#9a9080; line-height:1.7;
-    grid-column:1 / -1; border-top:1px solid #2b261e; background:#15130f;}
-  .hero.nopic{background:linear-gradient(100deg,#1b1813,#262117);}
+  .hero .dot.on{background:#e8c98b; border-color:#e8c98b;}
+  .hero .cr{position:absolute; left:0; right:0; bottom:0; padding:8px 14px 10px;
+    font-size:11.5px; color:#9a9080; line-height:1.7;
+    border-top:1px solid #2b261e; background:#15130f;}
   @media(max-width:700px){
     .hero{grid-template-columns:1fr;}
-    .hero .tx{padding:22px 18px 10px; order:2;}
+    .hero .art{width:auto; border-right:0; border-bottom:1px solid #2b261e; padding:14px;}
+    .hero .art img{max-height:260px;}
+    .hero .tx{padding:18px 18px 30px;}
     .hero .nm{font-size:31px;}
-    .hero .art{width:auto; order:1; border-left:0; border-bottom:1px solid #2b261e; padding:14px 0;}
-    .hero .art img{max-height:210px;}
-    .hero .cr{order:3;}   /* 不設 order 會跑到畫的上面去 */
+    .hero .dots{left:0; bottom:46px;}
   }
 
   /* 入口＝一棵法脈樹，不是一排頭像。
@@ -944,57 +944,73 @@ el("lines") && el("lines").addEventListener("click", e=>{
 
 /* 首屏那幅畫。**副標只由真實資料組出來**：原典寫出來的地名、站數、件數、館藏出處，
    一個字都不自己編（鐵律零）。沒有畫像的就走純墨底，不掛假圖。 */
+/* 最上方是一條 banner，**輪播所有祖師的古畫**（使用者 2026-10-08：
+   「讓觀眾有機會看到高僧的聖相，尤其古畫是收藏在博物館，很難得看得到」）。
+   所以它是一個展示櫃，不是「當前這位的頭像」——不管現在選誰，六幅都輪得到。
+   每一張都標明：是誰、畫的是什麼、哪一館哪一年什麼授權。
+   點某一張就切到那一位。選了有畫像的祖師，banner 會跳到他那一張。 */
+function 所有古畫(){
+  if(!PICS) return [];
+  const 序 = {};
+  DATA.祖師.forEach((p,i)=>{ 序[p.介面名] = i; });
+  return Object.keys(PICS)
+    .filter(k => !k.startsWith("_") && PICS[k].祖師)
+    .sort((a,b)=>(序[PICS[a].祖師] ?? 99) - (序[PICS[b].祖師] ?? 99) || (a<b?-1:1));
+}
+
 function renderHero(){
-  const p = DATA.祖師[mi];
-  const ks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
-  const 地 = [];
-  (p.站 || []).forEach(s => { if(s.地 && 地[地.length-1] !== s.地) 地.push(s.地); });
-  const 路 = 地.slice(0, 4).map(esc).join("　→　") + (地.length > 4 ? "　→　…" : "");
-  const 件 = (p.站 || []).length;
-  el("hero").innerHTML = '<div class="hero'+(ks.length ? '' : ' nopic')+'">'
-    + '<div class="tx"><div class="nm">'+esc(p.介面名)+'</div>'
-    + (路 ? '<div class="rt">'+路+'</div>' : '')
-    + '<div class="ct">'+stations().length+' 站　'+件+' 件事</div></div>'
-    + (ks.length
-        ? '<div class="art">'
-          + ks.map((k,i)=>'<img src="畫像/'+k+'.jpg" alt=""'+(i ? '' : ' class="on"')+'>').join("")
-          + (ks.length>1 ? '<div class="dots">'
-              + ks.map((k,i)=>'<button class="dot'+(i ? '' : ' on')+'" data-n="'+i+'"'
-                  + ' aria-label="第'+(i+1)+'幅"></button>').join("") + '</div>' : '')
-          + '</div>'
-        : '')
-    + (ks.length ? '<div class="cr"></div>' : '')
-    + '</div>';
+  const ks = 所有古畫();
+  if(!ks.length){ el("hero").innerHTML = ""; 輪播([]); return; }
+  el("hero").innerHTML = '<div class="hero">'
+    + '<div class="art">'
+    + ks.map((k,i)=>'<img src="畫像/'+k+'.jpg" alt=""'+(i ? '' : ' class="on"')+'>').join("")
+    + '</div>'
+    + '<div class="tx"><div class="nm"></div><div class="rt"></div><div class="ct"></div></div>'
+    + (ks.length>1 ? '<div class="dots">'
+        + ks.map((k,i)=>'<button class="dot'+(i ? '' : ' on')+'" data-n="'+i+'"'
+            + ' aria-label="'+esc(PICS[k].祖師)+'"></button>').join("") + '</div>' : '')
+    + '<div class="cr"></div></div>';
   輪播(ks);
 }
 
-/* 有古畫的都輪播（使用者 2026-10-08：「畫面會比較有趣」）。
-   **出處一定要跟著當下那一幅換**——每幅的館藏、年代、授權都不一樣，
-   掛錯就是把甲館的藏品說成乙館的。只有一幅時不輪播、不出圓點。 */
 let 輪播計時 = null;
 function 輪播(ks){
   clearInterval(輪播計時); 輪播計時 = null;
   if(!ks.length) return;
-  const 區 = el("hero").querySelector(".art");
-  const 圖 = [...區.querySelectorAll("img")];
-  const 點 = [...區.querySelectorAll(".dot")];
-  const 出處 = el("hero").querySelector(".cr");
+  const hero = el("hero");
+  const 圖 = [...hero.querySelectorAll(".art img")];
+  const 點 = [...hero.querySelectorAll(".dot")];
   let n = 0;
+
   const 換 = i => {
     n = (i + ks.length) % ks.length;
+    const m = PICS[ks[n]];
     圖.forEach((e,j)=>e.classList.toggle("on", j===n));
     點.forEach((e,j)=>e.classList.toggle("on", j===n));
-    const m = PICS[ks[n]];
-    出處.innerHTML = esc(m.館藏) + (m.年代 ? '　'+esc(m.年代) : '') + '　' + esc(m.授權);
+    hero.querySelector(".nm").textContent = m.祖師;
+    hero.querySelector(".rt").textContent = m.說明 || "";
+    const p = DATA.祖師.find(x=>x.介面名===m.祖師);
+    hero.querySelector(".ct").textContent =
+      p && (p.站||[]).length ? (stations(DATA.祖師.indexOf(p)).length+" 站　"+p.站.length+" 件事") : "";
+    // 出處一定要跟著當下這一幅換：每幅的館藏、年代、授權都不同
+    hero.querySelector(".cr").textContent =
+      m.館藏 + (m.年代 ? "　"+m.年代 : "") + "　" + m.授權;
   };
-  換(0);
-  if(ks.length < 2) return;
-  點.forEach(b => b.addEventListener("click", ()=>{ 換(+b.dataset.n); 重新計時(); }));
-  const 不要動畫 = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  function 重新計時(){
+  const 重新計時 = ()=>{
     clearInterval(輪播計時);
-    if(!不要動畫) 輪播計時 = setInterval(()=>換(n+1), 6000);
-  }
+    if(ks.length>1 && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+      輪播計時 = setInterval(()=>換(n+1), 6000);
+  };
+
+  // 現在選的這一位有畫像的話，banner 先停在他那一張
+  const 起 = ks.findIndex(k => PICS[k].祖師 === DATA.祖師[mi].介面名);
+  換(起 >= 0 ? 起 : 0);
+  點.forEach(b => b.addEventListener("click", e=>{ e.stopPropagation(); 換(+b.dataset.n); 重新計時(); }));
+  // 點 banner 就切到那一位
+  hero.querySelector(".hero").addEventListener("click", ()=>{
+    const i = DATA.祖師.findIndex(x=>x.介面名===PICS[ks[n]].祖師);
+    if(i>=0 && i!==mi) gotoMaster(i);
+  });
   重新計時();
 }
 
