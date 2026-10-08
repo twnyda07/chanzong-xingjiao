@@ -257,7 +257,7 @@
 <div class="wrap">
 <header>
   <h1>禪宗．祖師行腳</h1>
-  <div class="sub">達摩　慧可　僧璨　道信　弘忍　惠能</div>
+  <div class="sub" id="sub"></div>
 </header>
 
 <div class="masters" id="masters"></div>
@@ -974,6 +974,9 @@ function setMode(m){
 el("bMap").onclick = ()=>setMode("map");      // 已在地圖模式時＝重設，面板回到提示
 el("bLife").onclick = ()=>setMode("life");    // 已在逐站模式時＝從第一站重走
 
+// 標題下那排名字跟著資料走。原本是寫死的六個名字，加了臨濟五位之後就對不上了
+el("sub").textContent = DATA.祖師.filter(p=>(p.站||[]).length)
+                                 .map(p=>p.介面名).join("　");
 mi = 讀回選擇();                       // 重載後回到原本在看的那一位，不要默默跳回達摩
 renderMasters(); renderLines(); renderMap(); setMode("map");
 // 上一頁／下一頁換了網址裡的名字也要跟著換人
