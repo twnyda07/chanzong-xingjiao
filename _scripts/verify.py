@@ -34,6 +34,25 @@ def _subseq(needle, hay):
     return i == len(needle)
 
 
+# 「遇到的人」要合世情：本人與父母不算「遇到」。
+# 出生本來就會遇到母親，把父母列進去等於把「他出生了」寫成「他遇到了一個人」。
+# 姓氏（「萊州狄氏子」的狄氏）更不是人，那是家世。
+# （2026-10-08 使用者定的判準）
+親屬詞 = {"父", "母", "父母", "嚴父", "慈母", "老母", "先父", "先母", "亡父", "亡母",
+          "妻", "兄", "弟", "姊", "妹", "祖父", "祖母"}
+
+
+def 不算遇到的人(w):
+    """回傳擋下來的理由；是正常人物就回 None。"""
+    if w in 親屬詞:
+        return "父母親屬不算「遇到的人」"
+    if re.fullmatch(r".*(嚴父|慈母|老母|父|母)", w):
+        return "父母親屬不算「遇到的人」"
+    if re.fullmatch(r"[一-鿿]氏", w):
+        return "「%s」是姓氏不是人，那是家世" % w
+    return None
+
+
 def 別名(p):
     """這一位在各書裡的寫法，加上四字法號拆出來的兩截。
 
@@ -82,6 +101,12 @@ def main():
             for who in st.get("人") or []:
                 if who in 自己:
                     errors.append("%s：遇到的人寫了「%s」，那是他自己" % (where, who))
+                    continue
+                # 父母、姓氏都不算「遇到的人」。先擋這兩種，才輪得到下面的同名警告，
+                # 否則「惠能嚴父」會被當成可疑的同名而只出警告。
+                why = 不算遇到的人(who)
+                if why:
+                    errors.append("%s：遇到的人寫了「%s」——%s" % (where, who, why))
                 elif any(who.startswith(a) and who != a for a in 自己):
                     warns.append("%s：遇到的人「%s」以他自己的名號開頭，確認是別人才留"
                                  % (where, who))
