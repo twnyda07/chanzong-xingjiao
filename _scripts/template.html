@@ -2,18 +2,19 @@
 <title>禪宗．祖師行腳</title>
 <style>
   :root{
-    --paper:#fbfaf7; --card:#fff; --ink:#23201c; --ink2:#6b645b;
-    --rule:#e6e1d8; --accent:#4a5d52; --soft:#eef1ee; --c:#3d6ea6;
+    /* 護目大字：底色不刺眼但有實體感，字色夠黑，對比拉開 */
+    --paper:#f4f1ea; --card:#fffdf8; --ink:#1a1714; --ink2:#4d453b;
+    --rule:#d8d1c4; --accent:#3f5248; --soft:#e7ece7; --c:#2f5c8f;
   }
   *{box-sizing:border-box;}
   body{margin:0; padding:0 0 60px; background:var(--paper); color:var(--ink);
     font-family:"Songti TC","Noto Serif CJK TC","Source Han Serif TC",serif;
-    font-size:20px; line-height:1.9;}
+    font-size:22px; line-height:2.0;}
   .wrap{max-width:1040px; margin:0 auto; padding:0 24px;}
 
   header{padding:46px 0 22px; text-align:center;}
-  h1{font-size:40px; margin:0 0 6px; letter-spacing:8px;}
-  header .sub{color:var(--ink2); font-size:18px; letter-spacing:3px;}
+  h1{font-size:46px; margin:0 0 6px; letter-spacing:8px;}
+  header .sub{color:var(--ink2); font-size:21px; letter-spacing:3px;}
 
   .masters{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:26px 0 8px;}
   .m{width:124px; padding:16px 8px 13px; border:1px solid var(--rule); border-radius:8px;
@@ -25,21 +26,40 @@
   .m .face.pic img{width:100%; height:100%; object-fit:cover; object-position:50% 42%;
      filter:saturate(.9);}
   .m.on .face.pic img{filter:none;}
-  /* 祖師頁的大圖 */
-  .pf .portrait{float:right; width:190px; margin:0 0 16px 22px;}
-  .pf .portrait img{width:100%; border:1px solid var(--rule); border-radius:4px; display:block;}
-  .pf .portrait figcaption{font-size:13.5px; color:var(--ink2); line-height:1.7; margin-top:7px;}
-  .pf .portrait a{color:var(--accent);}
-  @media (max-width:700px){ .pf .portrait{float:none; width:100%; margin:0 0 16px;} }
-  .m b{font-size:22px; font-weight:normal; display:block;}
-  .m s{font-size:14px; color:var(--ink2); text-decoration:none; display:block; margin-top:2px;}
+  /* 祖師畫像區：多幅並列，可點開看大圖 */
+  .gallery{margin:0 0 30px; padding:22px; background:var(--card);
+    border:1px solid var(--rule); border-radius:8px;}
+  .gtitle{font-size:21px; margin-bottom:16px;}
+  .gtitle s{font-size:16px; color:#8c8273;}
+  .gallery .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:20px;}
+  .gallery figure{margin:0;}
+  .gallery .zoom{display:block; width:100%; padding:0; border:0; background:none; cursor:zoom-in;}
+  .gallery .zoom img{width:100%; display:block; border:1px solid var(--rule); border-radius:4px;
+    transition:.25s;}
+  .gallery .zoom:hover img{box-shadow:0 6px 22px rgba(0,0,0,.18); transform:translateY(-2px);}
+  .gallery figcaption{font-size:16px; color:var(--ink2); line-height:1.8; margin-top:10px;}
+  .gallery figcaption b{display:block; color:var(--ink); font-weight:normal; font-size:18px;}
+  .gallery figcaption span{display:block;}
+  .gallery figcaption a{display:inline-block; margin-top:6px; color:var(--c);}
+  /* 放大檢視 */
+  .lightbox{position:fixed; inset:0; background:rgba(26,23,20,.92); z-index:99;
+    display:none; align-items:center; justify-content:center; padding:28px; cursor:zoom-out;}
+  .lightbox.on{display:flex;}
+  .lightbox img{max-width:94vw; max-height:78vh; border-radius:4px; box-shadow:0 10px 50px rgba(0,0,0,.5);}
+  .lightbox .cap{position:absolute; left:0; right:0; bottom:0; padding:18px 24px;
+    background:rgba(26,23,20,.85); color:#f4f1ea; font-size:17px; line-height:1.9; text-align:center;}
+  .lightbox .cap a{color:#cfe0f0;}
+  .lightbox .close{position:absolute; top:18px; right:24px; font-size:34px; color:#f4f1ea;
+    background:none; border:0; cursor:pointer; font-family:inherit;}
+  .m b{font-size:25px; font-weight:normal; display:block;}
+  .m s{font-size:16px; color:var(--ink2); text-decoration:none; display:block; margin-top:2px;}
   .m.on{border-color:transparent; box-shadow:0 0 0 2px var(--mc) inset; transform:translateY(-3px);}
   .m.on .face{background:color-mix(in srgb,var(--mc) 20%,#fff); color:var(--mc);}
   .m.on b{color:var(--mc);}
   .m.todo{opacity:.5; cursor:default;}
 
   .modes{display:flex; gap:10px; justify-content:center; margin:22px 0 6px;}
-  .modes button{font-family:inherit; font-size:18px; padding:12px 26px; border-radius:999px;
+  .modes button{font-family:inherit; font-size:21px; padding:12px 26px; border-radius:999px;
     border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;
     display:flex; align-items:center; gap:9px; transition:.25s;}
   .modes button b{display:inline-flex; width:24px; height:24px; border-radius:50%;
@@ -48,13 +68,13 @@
   .modes button:hover{border-color:var(--c);}
   .modes button.on{background:var(--c); border-color:var(--c); color:#fff;}
   .modes button.on b{background:rgba(255,255,255,.3); color:#fff;}
-  .howto{text-align:center; font-size:17px; color:var(--ink2); margin:22px 0 2px;}
+  .howto{text-align:center; font-size:20px; color:var(--ink2); margin:22px 0 2px;}
   .howto b{color:var(--ink); font-weight:normal;}
 
   s{text-decoration:none;}
   .cbhead{font-size:16.5px; color:var(--ink2); margin-bottom:12px;}
   .cbhead s{font-size:14px; color:#a9a194;}
-  .note{text-align:center; color:var(--ink2); font-size:15.5px; margin:10px 0 22px;}
+  .note{text-align:center; color:var(--ink2); font-size:17.5px; margin:10px 0 22px;}
 
   .stage{display:grid; grid-template-columns:1.1fr 1fr; gap:18px; align-items:start;}
   @media (max-width:760px){ .stage{grid-template-columns:1fr;} }
@@ -71,7 +91,7 @@
     font-family:inherit; cursor:pointer; text-align:center; padding:4px;}
   .spot i{display:block; width:18px; height:18px; border-radius:50%; background:#d9d3c8;
     margin:0 auto 5px; transition:.35s;}
-  .spot b{font-size:15px; font-weight:normal; color:var(--ink2); transition:.3s; white-space:nowrap;}
+  .spot b{font-size:17px; font-weight:normal; color:var(--ink2); transition:.3s; white-space:nowrap;}
   .spot i{font-style:normal; font-size:11.5px; line-height:18px; color:transparent;
     text-align:center; font-family:inherit;}
   .spot.lit i{background:var(--sc, var(--c)); color:#fff;
@@ -92,12 +112,12 @@
   /* 下一站不顯示地名——它會跳動、也有編號，而且常和剛點過的那站同一個地方，
      兩個地名疊在一起反而看不清 */
   .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0;}
-  .chip{font-family:inherit; font-size:18px; padding:9px 18px; border-radius:999px;
+  .chip{font-family:inherit; font-size:20px; padding:9px 18px; border-radius:999px;
     border:1px solid var(--rule); background:#fff; color:var(--ink2); cursor:pointer;}
-  .chip .n{font-size:14px; color:#a9a194; margin-left:6px;}
+  .chip .n{font-size:16px; color:#a9a194; margin-left:6px;}
   .chip.on{background:color-mix(in srgb, var(--sc, var(--c)) 14%, #fff);
     border-color:var(--sc, var(--c)); color:var(--sc, var(--c));}
-  .chip .no{display:inline-block; min-width:1.6em; margin-right:7px; font-size:14px;
+  .chip .no{display:inline-block; min-width:1.6em; margin-right:7px; font-size:16px;
     color:#a9a194;}
   .chip.on .no{color:var(--sc, var(--c));}
   .chip.nogeo{border-style:dashed;}
@@ -105,12 +125,12 @@
   .chip.done{border-color:var(--sc, var(--c));}
   .km{margin-top:18px; padding:20px; background:#f7f5f1; border:1px solid var(--rule);
     border-radius:8px; text-align:center;}
-  .km .kbig{font-size:40px; letter-spacing:2px; color:var(--c);}
-  .km .ksub{font-size:16px; color:var(--ink2); margin-top:2px;}
+  .km .kbig{font-size:48px; letter-spacing:2px; color:var(--c);}
+  .km .ksub{font-size:18px; color:var(--ink2); margin-top:2px;}
   .km table.facts{text-align:left;}
-  .leg{margin:14px 0 0; font-size:16.5px; color:var(--ink2); background:#f7f5f1;
+  .leg{margin:16px 0 0; font-size:19px; color:var(--ink2); background:#f7f5f1;
     border-left:3px solid var(--c); border-radius:3px; padding:11px 14px;}
-  .leg b{color:var(--c); font-weight:normal; font-size:19px;}
+  .leg b{color:var(--c); font-weight:normal; font-size:23px;}
   .leg s{font-size:13.5px; color:#a9a194;}
   .legs{margin-top:16px; text-align:left;}
   .legs summary{font-size:16px; color:var(--ink2); cursor:pointer;}
@@ -118,6 +138,13 @@
   .kwarn{font-size:14.5px; color:#8a6f3c; background:#faf4e6; border:1px dashed #ddc89a;
     border-radius:4px; padding:11px 13px; margin:14px 0 0; line-height:1.85; text-align:left;}
   .kwarn b{font-weight:normal; color:#6f5a2e;}
+  .evt{margin:0 0 30px; padding-bottom:24px; border-bottom:1px dashed var(--rule);}
+  .evt:last-child{border-bottom:0; padding-bottom:0; margin-bottom:0;}
+  .evn{font-size:17px; color:#8c8273; margin:0 0 10px; letter-spacing:1px;}
+  .who{margin-top:16px;}
+  .who .wht{font-size:17px; color:var(--ink2); margin-bottom:8px;}
+  .wtag{display:inline-block; font-size:20px; padding:8px 16px; margin:0 8px 8px 0;
+    border-radius:999px; background:var(--soft); border:1px solid var(--rule); color:var(--ink);}
   .backhint{margin-top:16px; font-size:15.5px; color:var(--ink2);
     background:#f5f3ee; border:1px dashed var(--rule); border-radius:4px; padding:11px 14px;}
   /* 未定位的點用虛線框表示，但亮起時仍要顯示它自己的站色 */
@@ -129,18 +156,18 @@
 
   .panel{border:1px solid var(--rule); border-radius:8px; background:#fff;
     padding:24px 26px; min-height:520px; max-height:520px; overflow:auto;}
-  .panel .hint{color:var(--ink2); font-size:17px; text-align:center; margin-top:150px;}
-  .panel h3{margin:0 0 12px; font-size:26px; font-weight:normal;}
-  table.facts{width:100%; border-collapse:collapse; font-size:17px; margin:0 0 16px;}
+  .panel .hint{color:var(--ink2); font-size:20px; text-align:center; margin-top:150px;}
+  .panel h3{margin:0 0 14px; font-size:30px; font-weight:normal;}
+  table.facts{width:100%; border-collapse:collapse; font-size:19px; margin:0 0 16px;}
   table.facts th{text-align:left; font-weight:normal; color:var(--ink2); width:5.5em;
     padding:7px 10px 7px 0; border-bottom:1px solid var(--rule); vertical-align:top;}
   table.facts td{padding:7px 0; border-bottom:1px solid var(--rule);}
-  .quote{background:#f7f5f1; border-left:4px solid var(--c); border-radius:4px;
-    padding:18px 20px; font-size:21px; line-height:2.05; margin:0 0 8px;}
-  .src{font-size:15px; color:var(--ink2);}
+  .quote{background:#f0ece3; border-left:5px solid var(--c); border-radius:4px;
+    padding:20px 22px; font-size:24px; line-height:2.15; margin:0 0 10px; color:var(--ink);}
+  .src{font-size:17px; color:var(--ink2);}
   .kws{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0;}
-  .kw{background:var(--c); color:#fff; border-radius:6px; padding:12px 20px;
-    font-size:26px; letter-spacing:4px; white-space:nowrap;}
+  .kw{background:var(--c); color:#fff; border-radius:6px; padding:13px 22px;
+    font-size:30px; letter-spacing:4px; white-space:nowrap;}
   .variant{margin-top:16px; background:#f3f2ee; border:1px dashed var(--rule);
     border-radius:4px; padding:14px 16px; font-size:16px; color:var(--ink2);}
   .prog{text-align:center; color:var(--ink2); font-size:16px; margin:14px 0 0;}
@@ -177,30 +204,30 @@
 
   /* ── 七面向檔案 ── */
   #profile{margin-top:40px;}
-  .pf h2{font-size:27px; margin:0 0 4px; font-weight:normal; letter-spacing:2px;}
-  .pf .alias{color:var(--ink2); font-size:16px; margin:0 0 6px;}
+  .pf h2{font-size:32px; margin:0 0 4px; font-weight:normal; letter-spacing:2px;}
+  .pf .alias{color:var(--ink2); font-size:18px; margin:0 0 6px;}
   .sec{border-top:1px solid var(--rule); padding:22px 0 6px;}
-  .sec h3{font-size:22px; margin:0 0 14px; font-weight:normal; color:var(--c); letter-spacing:2px;}
-  .sec .empty{color:var(--ink2); font-size:16.5px; background:#f5f3ee;
+  .sec h3{font-size:26px; margin:0 0 14px; font-weight:normal; color:var(--c); letter-spacing:2px;}
+  .sec .empty{color:var(--ink2); font-size:19px; background:#f5f3ee;
     border:1px dashed var(--rule); border-radius:4px; padding:14px 18px;}
   .ent{margin:0 0 20px; display:grid; grid-template-columns:7.5em 1fr; gap:0 18px;}
   @media (max-width:700px){ .ent{grid-template-columns:1fr; gap:6px;} }
-  .ent .lab{font-size:17px; color:var(--ink2); padding-top:3px;}
+  .ent .lab{font-size:19px; color:var(--ink2); padding-top:3px;}
   .ent .lab s{display:block; text-decoration:none; font-size:14.5px; color:#a9a194; margin-top:2px;}
-  .ent .q{background:#fff; border:1px solid var(--rule); border-left:4px solid var(--c);
-    border-radius:4px; padding:15px 18px; font-size:19.5px; line-height:2;}
+  .ent .q{background:var(--card); border:1px solid var(--rule); border-left:5px solid var(--c);
+    border-radius:4px; padding:17px 20px; font-size:22px; line-height:2.1;}
   .ent .q s{display:block; text-decoration:none; font-size:14.5px; color:var(--ink2);
     margin-top:9px; letter-spacing:0;}
   .ppl{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   @media (max-width:700px){ .ppl{grid-template-columns:1fr;} }
   .ppl .card{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:16px 18px;}
-  .ppl .nm{font-size:20px;}
-  .ppl .who{font-size:15px; color:var(--ink2); margin-left:8px;}
-  .ppl .q2{font-size:17px; line-height:1.95; color:var(--ink); margin-top:9px;}
+  .ppl .nm{font-size:23px;}
+  .ppl .who{font-size:17px; color:var(--ink2); margin-left:8px;}
+  .ppl .q2{font-size:19px; line-height:1.95; color:var(--ink); margin-top:9px;}
   .ppl .rf2{font-size:14px; color:var(--ink2); margin-top:7px;}
 
   .foot{margin-top:34px; padding-top:18px; border-top:1px solid var(--rule);
-    color:var(--ink2); font-size:15.5px; text-align:center; line-height:2;}
+    color:var(--ink2); font-size:17px; text-align:center; line-height:2;}
   details{margin-top:10px; font-size:15.5px; color:var(--ink2);}
   details summary{cursor:pointer;}
   details li{margin:3px 0;}
@@ -222,6 +249,22 @@
 <p class="note" id="modeNote"></p>
 <p class="note" id="mapNote" style="margin-top:-14px; font-size:14.5px"></p>
 
+<div class="stage">
+  <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
+    <div class="chips" id="chips"></div></div>
+  <div class="panel" id="panel"><p class="hint">先選一位祖師</p></div>
+</div>
+
+<p class="prog" id="prog"></p>
+
+<div id="profile"></div>
+
+<div class="lightbox" id="lightbox">
+  <button class="close" id="lbClose" aria-label="關閉">×</button>
+  <img id="lbImg" alt="">
+  <div class="cap" id="lbCap"></div>
+</div>
+
 <div class="lifelines">
   <div class="cbhead">六條生命線　<s>橫軸是西元年。圓點是原典記有年號的事件，點它看原文。</s></div>
   <div id="lines"></div>
@@ -234,16 +277,6 @@
     西元是為了排位置換算的，<b>不是原典的字</b>，畫面顯示的一律是原典字樣。</p>
   <div class="lpanel" id="lpanel"></div>
 </div>
-
-<div class="stage">
-  <div><div class="mapbox" id="mapbox"><svg id="paths"></svg></div>
-    <div class="chips" id="chips"></div></div>
-  <div class="panel" id="panel"><p class="hint">先選一位祖師</p></div>
-</div>
-
-<p class="prog" id="prog"></p>
-
-<div id="profile"></div>
 
 <div class="foot">
   實心圓點的位置取自<strong>哈佛・復旦中國歷史地理資訊系統</strong>，依各祖師在世年份查得的治所座標；
@@ -317,19 +350,32 @@ function renderMasters(){
     const has = (p.站||[]).length>0;
     return '<div class="m'+(i===mi&&has?' on':'')+(has?'':' todo')+'" data-i="'+i+'" style="--mc:'+p.色+'">'
       + 臉(p.介面名, has)
-      + '<b>'+esc(p.介面名)+'</b><s>'+(has?(p.站.length+' 站'):'尚未建站')+'</s></div>';
+      + '<b>'+esc(p.介面名)+'</b><s>'
+      + (has ? (stations(i).length+' 站　'+p.站.length+' 件事') : '尚未建站')+'</s></div>';
   }).join("");
 }
 
-function stations(){ return DATA.祖師[mi].站 || []; }
+/* 一站＝一個地點的一次造訪。連續同一地點的記載合併成一站，站內再分列各段原文。
+   拆開會讓人以為達摩去了金陵兩次。（2026-10-08 使用者指正） */
+function stations(i){
+  const raw = DATA.祖師[(i===undefined?mi:i)].站 || [];
+  const out = [];
+  raw.forEach(s=>{
+    const 末 = out[out.length-1];
+    const key = s.地 || "（原典未載地點）";
+    if(末 && 末.地key === key){ 末.事.push(s); }
+    else out.push({ 地key:key, 地:s.地, 今地:s.今地, 座標:s.座標, 事:[s] });
+  });
+  return out;
+}
 
 /* 地圖上一個地方＝一個點，同一地發生的事全部收在那個點底下。
    生平模式才是一站一站照順序走。 */
 function places(){
   const out = [], idx = {};
-  stations().forEach((s,i)=>{
+  (DATA.祖師[mi].站 || []).forEach((s,i)=>{
     const key = s.地 || "（原典未載地點）";
-    if(idx[key]===undefined){ idx[key]=out.length; out.push({地:key, 事:[]}); }
+    if(idx[key]===undefined){ idx[key]=out.length; out.push({地:key, 今地:s.今地, 事:[]}); }
     out[idx[key]].事.push(Object.assign({序:i+1}, s));
   });
   return out;
@@ -514,20 +560,38 @@ function 路段表(st){
         + '</td></tr>').join("") + '</table></details>';
 }
 
-function stationHtml(s, head){
-  const kws = (s.關鍵詞||[]).map(k=>'<span class="kw">'+esc(k)+'</span>').join("");
+function 人條(列){
+  if(!列 || !列.length) return "";
+  return '<div class="who"><div class="wht">在這裡遇到的人</div>'
+    + 列.map(n=>'<span class="wtag">'+esc(n)+'</span>').join("") + '</div>';
+}
+
+function 事段(ev, i, 共){
+  const kws = (ev.關鍵詞||[]).map(k=>'<span class="kw">'+esc(k)+'</span>').join("");
+  return '<div class="evt">'
+    + (共>1 ? '<div class="evn">這個地方的第 '+(i+1)+' 件事　共 '+共+' 件</div>' : "")
+    + '<table class="facts">'
+    + '<tr><th>年代</th><td>'+esc(ev.年 || "原典未載")+'</td></tr>'
+    + '<tr><th>出處</th><td>'+esc(ev.出處.書名)+'　卷'+ev.出處.卷+'　'+esc(ev.出處.經號)+'</td></tr>'
+    + '</table>'
+    + '<div class="quote">'+esc(ev.原文)+'</div>'
+    + (kws ? '<div class="kws">'+kws+'</div>' : "")
+    + 人條(ev.人)
+    + (ev.異文提醒 ? '<div class="variant">異文　'+esc(ev.異文提醒)+'</div>' : "")
+    + '</div>';
+}
+
+function stationHtml(st, head){
+  const 事 = st.事 || [st];
+  const 全人 = [...new Set(事.flatMap(e=>e.人||[]))];
   return '<h3>'+head+'</h3>'
     + '<table class="facts">'
-    + '<tr><th>地點</th><td>'+esc(s.地 || "原典未載")+'</td></tr>'
-    + '<tr><th>今日</th><td>'+(s.今地 ? esc(s.今地) : "原典地名尚未定位") +'</td></tr>'
-    + '<tr><th>年代</th><td>'+esc(s.年 || "原典未載")+'</td></tr>'
-    + '<tr><th>遇到的人</th><td>'+((s.人&&s.人.length)?s.人.map(esc).join("、"):"—")+'</td></tr>'
-    + '<tr><th>出處</th><td>'+esc(s.出處.書名)+'　卷'+s.出處.卷+'</td></tr>'
+    + '<tr><th>地點</th><td>'+esc(st.地 || "原典未載")+'</td></tr>'
+    + '<tr><th>今日</th><td>'+(st.今地 ? esc(st.今地) : "原典地名尚未定位") +'</td></tr>'
+    + (全人.length ? '<tr><th>遇到的人</th><td>'+全人.map(esc).join("、")+'</td></tr>' : "")
+    + '<tr><th>這裡發生</th><td>'+事.length+' 件事</td></tr>'
     + '</table>'
-    + '<div class="quote">'+esc(s.原文)+'</div>'
-    + '<div class="src">'+esc(s.出處.書名)+'　卷'+s.出處.卷+'　'+esc(s.出處.經號)+'</div>'
-    + (kws ? '<div class="kws">'+kws+'</div>' : "")
-    + (s.異文提醒 ? '<div class="variant">異文　'+esc(s.異文提醒)+'</div>' : "");
+    + 事.map((e,i)=>事段(e,i,事.length)).join("");
 }
 
 function renderHowto(){
@@ -556,17 +620,7 @@ function renderPanel(){
       + '<table class="facts"><tr><th>今日</th><td>'
       + esc((pl.事.find(function(e){return e.今地;})||{}).今地 || "原典地名尚未定位") + '</td></tr>'
       + '<tr><th>在這裡</th><td>' + pl.事.length + ' 件事</td></tr></table>'
-      + pl.事.map(ev=>'<div style="margin:0 0 26px">'
-          + '<table class="facts">'
-          + '<tr><th>年代</th><td>'+esc(ev.年 || "原典未載")+'</td></tr>'
-          + '<tr><th>遇到的人</th><td>'+((ev.人&&ev.人.length)?ev.人.map(esc).join("、"):"—")+'</td></tr>'
-          + '</table>'
-          + '<div class="quote">'+esc(ev.原文)+'</div>'
-          + '<div class="src">'+esc(ev.出處.書名)+'　卷'+ev.出處.卷+'　'+esc(ev.出處.經號)+'</div>'
-          + ((ev.關鍵詞||[]).length
-              ? '<div class="kws">'+ev.關鍵詞.map(k=>'<span class="kw">'+esc(k)+'</span>').join("")+'</div>' : "")
-          + (ev.異文提醒 ? '<div class="variant">異文　'+esc(ev.異文提醒)+'</div>' : "")
-          + '</div>').join("");
+      + pl.事.map((ev,i)=>事段(ev,i,pl.事.length)).join("");
     el("prog").textContent = "";
     return;
   }
@@ -717,14 +771,21 @@ function renderProfile(){
   const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
   if(!f){ el("profile").innerHTML = ""; return; }
   let h = '<div class="pf">';
-  const pk = PICS ? Object.keys(PICS).find(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : null;
-  if(pk){
-    const m = PICS[pk];
-    h += '<figure class="portrait"><img src="畫像/'+pk+'.jpg" alt="">'
-      + '<figcaption>' + esc(m.說明) + '<br>' + esc(m.標題) + '<br>'
-      + esc(m.館藏) + (m.年代 ? '　' + esc(m.年代) : '') + '<br>'
-      + esc(m.授權) + '　<a href="' + esc(m.詳目網址) + '" target="_blank" rel="noopener">館藏詳目</a>'
-      + '</figcaption></figure>';
+  const pks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
+  if(pks.length){
+    h += '<div class="gallery"><div class="gtitle">他的畫像　'
+      + pks.length + ' 幅　<s>點圖可放大看</s></div><div class="grid">'
+      + pks.map(k=>{
+          const m = PICS[k];
+          return '<figure class="pic"><button class="zoom" data-k="'+k+'">'
+            + '<img src="畫像/'+k+'.jpg" alt="'+esc(m.說明)+'"></button>'
+            + '<figcaption><b>'+esc(m.說明)+'</b>'
+            + '<span>'+esc(m.標題)+'</span>'
+            + '<span>'+esc(m.館藏)+(m.年代?'　'+esc(m.年代):'')+'</span>'
+            + '<span>'+esc(m.授權)+'</span>'
+            + '<a href="'+esc(m.詳目網址)+'" target="_blank" rel="noopener">到館藏網站看原件 ↗</a>'
+            + '</figcaption></figure>';
+        }).join("") + '</div></div>';
   }
   h += '<h2>' + esc(p.介面名) + '</h2>';
   if(p.各書異寫 && p.各書異寫.length)
@@ -756,9 +817,15 @@ function renderProfile(){
 }
 
 function renderSources(){
-  const seen = {}, st = stations();
-  st.forEach(s=>{ seen[s.出處.書名+"　卷"+s.出處.卷+"（"+s.出處.經號+"）"]=1; });
-  el("srcUl").innerHTML = Object.keys(seen).map(k=>'<li>'+esc(k)+'</li>').join("");
+  const seen = {};
+  (DATA.祖師[mi].站 || []).forEach(s=>{
+    if(s && s.出處) seen[s.出處.書名+"　卷"+s.出處.卷+"（"+s.出處.經號+"）"]=1;
+  });
+  const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[DATA.祖師[mi].介面名] : null;
+  if(f) 節序.forEach(k => (f[k]||[]).forEach(e=>{
+    if(e && e.出處) seen[e.出處.書名+"　卷"+e.出處.卷+"（"+e.出處.經號+"）"]=1;
+  }));
+  el("srcUl").innerHTML = Object.keys(seen).sort().map(k=>'<li>'+esc(k)+'</li>').join("");
 }
 
 function gotoMaster(i){
@@ -767,6 +834,24 @@ function gotoMaster(i){
   renderMasters(); renderMap(); renderPanel(); renderHowto();
   window.scrollTo({top:0, behavior:"smooth"});
 }
+
+/* 畫像放大 */
+document.addEventListener("click", e=>{
+  const z = e.target.closest(".zoom");
+  if(z){
+    const m = PICS[z.dataset.k];
+    el("lbImg").src = "畫像/" + z.dataset.k + ".jpg";
+    el("lbCap").innerHTML = '<b>' + esc(m.說明) + '</b>　' + esc(m.標題) + '<br>'
+      + esc(m.館藏) + (m.年代 ? '　' + esc(m.年代) : '') + '　' + esc(m.授權)
+      + '　<a href="' + esc(m.詳目網址) + '" target="_blank" rel="noopener">到館藏網站看原件 ↗</a>';
+    el("lightbox").classList.add("on");
+    return;
+  }
+  if(e.target.closest(".lightbox")) el("lightbox").classList.remove("on");
+});
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape") el("lightbox").classList.remove("on");
+});
 
 el("masters").addEventListener("click", e=>{
   const m = e.target.closest(".m"); if(!m || m.classList.contains("todo")) return;
