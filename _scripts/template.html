@@ -147,7 +147,20 @@
           padding:1px 6px; border-radius:4px;}
   /* 只顯示「正在看的這一站」與「下一站」的地名。其餘靠點上的編號與下方籤列辨識，
      否則同一個地方的好幾站會把地名疊成一團。 */
-  .spot.cur b, .spot:hover b, .spot:focus b{opacity:1;}
+  .spot.cur b, .spot:hover b, .spot:focus b{opacity:1; pointer-events:auto;}
+  /* ⚠ opacity:0 的元素**照樣接得到點擊**。看不見的地名標籤會壓在別站的圓點上，
+     把點擊吃掉——使用者 2026-10-08 回報「點 7 沒反應」，就是第 9 站「大梵寺」
+     那張看不見的標籤蓋住第 7 站的圓點，而第 9 站還沒走到，pick() 直接 return。
+     所以標籤預設不吃點擊，只有正在顯示的那一張才吃。 */
+  .spot b{pointer-events:none;}
+  /* 該點的那一顆要壓在最上面，不可以被旁邊的站蓋住 */
+  .spot.next{z-index:6;}
+  .spot.cur{z-index:5;}
+  /* 點到還沒走到的站時，把「該點這顆」指出來 */
+  @keyframes 指一下{0%,100%{transform:scale(1);} 30%{transform:scale(1.5);} 60%{transform:scale(1);}}
+  .spot.hint i{animation:指一下 .6s ease-in-out 2;}
+  @keyframes 閃一下{0%,100%{background:transparent;} 40%{background:color-mix(in srgb,var(--c) 18%,transparent);}}
+  .howto.hint{animation:閃一下 .6s ease-in-out 2; border-radius:6px;}
   /* 下一站不顯示地名——它會跳動、也有編號，而且常和剛點過的那站同一個地方，
      兩個地名疊在一起反而看不清 */
   .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0;}
@@ -1035,11 +1048,44 @@ function pick(i){
   if(mode==="map"){ cur = i; }
   else if(i === step){ step++; 回看 = -1; }       // 點會跳的那顆＝前進一站
   else if(i < step){ 回看 = i; }                   // 點已經亮的＝回去看那一站
-  else return;                                     // 還沒走到的不給點
+  else { 指一下下一站(); return; }                  // 還沒走到的不給點，但要讓人看見「點這顆」
   paintSpots(); renderPanel(); renderHowto();
 }
+
+/* 點到還沒走到的站，原本是**靜悄悄什麼都不做**——使用者看到的就是「點了沒反應」。
+   不給前進是對的（一站一站走才有意義），但要回答他：該點的是會跳的那一顆。 */
+function 指一下下一站(){
+  const nx = document.querySelector(".spot.next");
+  if(!nx) return;
+  nx.classList.remove("hint"); void nx.offsetWidth; nx.classList.add("hint");
+  setTimeout(()=>nx.classList.remove("hint"), 1200);
+  const h = el("howto");
+  if(h){ h.classList.remove("hint"); void h.offsetWidth; h.classList.add("hint");
+         setTimeout(()=>h.classList.remove("hint"), 1200); }
+}
+/* 相鄰的站會互相覆蓋：圓點 18px、按鈕 26px，兩個地方在圖上不到 26px 就疊住了
+   （新州與四會、蘄春破頭山與黃梅縣都是）。被蓋住的那顆按下去會打到鄰居，
+   使用者看到的就是「點了沒反應」。
+   **不要為了好點就把圓點從真實座標挪開**——那會讓「圓點是歷史地理系統定位的
+   真實位置」這句話失真。改成按下去找最近的那顆：每顆都還是在自己的真實位置上，
+   但各自擁有離自己最近的那一塊地，誰都點得到。 */
+function 最近的站(x, y){
+  let best = null, bd = Infinity;
+  el("mapbox").querySelectorAll(".spot").forEach(s=>{
+    const r = s.querySelector("i").getBoundingClientRect();
+    const d = Math.hypot(x - (r.left + r.width/2), y - (r.top + r.height/2));
+    if(d < bd){ bd = d; best = s; }
+  });
+  return bd <= 30 ? best : null;
+}
 el("mapbox").addEventListener("click", e=>{
-  const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
+  const b = e.target.closest(".spot"); if(!b) return;
+  // **一律找最近的圓點**。不可以因為「點到的是某站的地名標籤」就直接給那一站——
+  // 正在看的那站標籤是看得見的，而且常常整塊蓋在鄰站的圓點上，
+  // 那樣會把「我要點旁邊那顆」變成「又選回原本那顆」。
+  // 離所有圓點都超過 30px（例如點在長地名的尾端）才退回標籤自己的那一站。
+  const 目標 = 最近的站(e.clientX, e.clientY) || b;
+  pick(+目標.dataset.i);
 });
 el("nogeoband").addEventListener("click", e=>{      // 地圖外面那條也要能點
   const b = e.target.closest(".spot"); if(b) pick(+b.dataset.i);
