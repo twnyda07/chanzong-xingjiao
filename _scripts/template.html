@@ -22,7 +22,15 @@
   .m .face{width:68px; height:82px; margin:0 auto 9px; border-radius:36px 36px 30px 30px;
      background:linear-gradient(180deg,#efebe3,#e3ded4); display:flex; align-items:center;
      justify-content:center; color:#b3aa9c; font-size:13px; transition:.4s; overflow:hidden;}
-  .m .face.pic{background:#efece5;}
+  .m .face.pic{background:#efece5; cursor:zoom-in;}
+  .m .face.pic::after{content:"看畫像"; position:absolute; left:0; right:0; bottom:0;
+    background:rgba(26,23,20,.62); color:#fff; font-size:13px; line-height:22px;
+    opacity:0; transition:.25s;}
+  .m .face{position:relative;}
+  .m:hover .face.pic::after{opacity:1;}
+  @keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(47,92,143,0);}
+    30%{box-shadow:0 0 0 6px rgba(47,92,143,.28);}}
+  .gallery.flash{animation:flash 1.3s ease-out;}
   .m .face.pic img{width:100%; height:100%; object-fit:cover; object-position:50% 42%;
      filter:saturate(.9);}
   .m.on .face.pic img{filter:none;}
@@ -241,6 +249,7 @@
 
 <div class="masters" id="masters"></div>
 
+<div id="gallery"></div>
 <p class="howto" id="howto"></p>
 <div class="modes">
   <button id="bMap" class="on"><b>①</b> 看他去過哪裡</button>
@@ -446,6 +455,7 @@ function renderMap(){
   }).join("");
   paintSpots();
   renderSources();
+  renderGallery();
   renderProfile();
 }
 
@@ -766,27 +776,31 @@ el("lines") && el("lines").addEventListener("click", e=>{
 /* 只動顯示，不動資料：在已渲染的引文裡把選中的字包起來 */
 
 
+function renderGallery(){
+  const p = DATA.祖師[mi];
+  const pks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
+  if(!pks.length){ el("gallery").innerHTML = ""; return; }
+  el("gallery").innerHTML = '<div class="gallery"><div class="gtitle">'
+    + esc(p.介面名) + '　現存畫像 ' + pks.length + ' 幅　<s>點圖放大，下面有館藏出處與連結</s></div>'
+    + '<div class="grid">'
+    + pks.map(k=>{
+        const m = PICS[k];
+        return '<figure class="pic"><button class="zoom" data-k="'+k+'">'
+          + '<img src="畫像/'+k+'.jpg" alt="'+esc(m.說明)+'"></button>'
+          + '<figcaption><b>'+esc(m.說明)+'</b>'
+          + '<span>'+esc(m.標題)+'</span>'
+          + '<span>'+esc(m.館藏)+(m.年代?'　'+esc(m.年代):'')+'</span>'
+          + '<span>'+esc(m.授權)+'</span>'
+          + '<a href="'+esc(m.詳目網址)+'" target="_blank" rel="noopener">到館藏網站看原件 ↗</a>'
+          + '</figcaption></figure>';
+      }).join("") + '</div></div>';
+}
+
 function renderProfile(){
   const p = DATA.祖師[mi];
   const f = (PROFILES && PROFILES.祖師檔案) ? PROFILES.祖師檔案[p.介面名] : null;
   if(!f){ el("profile").innerHTML = ""; return; }
   let h = '<div class="pf">';
-  const pks = PICS ? Object.keys(PICS).filter(k => !k.startsWith("_") && PICS[k].祖師 === p.介面名) : [];
-  if(pks.length){
-    h += '<div class="gallery"><div class="gtitle">他的畫像　'
-      + pks.length + ' 幅　<s>點圖可放大看</s></div><div class="grid">'
-      + pks.map(k=>{
-          const m = PICS[k];
-          return '<figure class="pic"><button class="zoom" data-k="'+k+'">'
-            + '<img src="畫像/'+k+'.jpg" alt="'+esc(m.說明)+'"></button>'
-            + '<figcaption><b>'+esc(m.說明)+'</b>'
-            + '<span>'+esc(m.標題)+'</span>'
-            + '<span>'+esc(m.館藏)+(m.年代?'　'+esc(m.年代):'')+'</span>'
-            + '<span>'+esc(m.授權)+'</span>'
-            + '<a href="'+esc(m.詳目網址)+'" target="_blank" rel="noopener">到館藏網站看原件 ↗</a>'
-            + '</figcaption></figure>';
-        }).join("") + '</div></div>';
-  }
   h += '<h2>' + esc(p.介面名) + '</h2>';
   if(p.各書異寫 && p.各書異寫.length)
     h += '<p class="alias">各書異寫　' + p.各書異寫.map(esc).join("　") + '</p>';
@@ -828,11 +842,23 @@ function renderSources(){
   el("srcUl").innerHTML = Object.keys(seen).sort().map(k=>'<li>'+esc(k)+'</li>').join("");
 }
 
-function gotoMaster(i){
+function gotoMaster(i, 帶到畫像){
   if(!(DATA.祖師[i].站||[]).length) return;
   mi = i; step = 0; cur = -1; 回看 = -1;
   renderMasters(); renderMap(); renderPanel(); renderHowto();
-  window.scrollTo({top:0, behavior:"smooth"});
+  if(帶到畫像){
+    // 點頭像就是想看畫像。畫面要自己跑過去，不然會以為壞掉沒反應。
+    requestAnimationFrame(()=>{
+      const g = el("gallery").querySelector(".gallery") || el("gallery");
+      if(!g) { window.scrollTo({top:0, behavior:"smooth"}); return; }
+      const y = g.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top:y, behavior:"smooth" });
+      g.classList.add("flash");
+      setTimeout(()=>g.classList.remove("flash"), 1400);
+    });
+  } else {
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
 }
 
 /* 畫像放大 */
@@ -855,7 +881,8 @@ document.addEventListener("keydown", e=>{
 
 el("masters").addEventListener("click", e=>{
   const m = e.target.closest(".m"); if(!m || m.classList.contains("todo")) return;
-  gotoMaster(+m.dataset.i);
+  const 點到畫像 = !!e.target.closest(".face");
+  gotoMaster(+m.dataset.i, 點到畫像);
 });
 function pick(i){
   if(mode==="map"){ cur = i; }
