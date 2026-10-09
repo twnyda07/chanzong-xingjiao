@@ -43,6 +43,15 @@
   .hero .art img{max-width:100%; max-height:330px; display:block;
     position:absolute; opacity:0; transition:opacity 1s ease;}
   .hero .art img.on{opacity:1; position:relative;}
+  /* ⚠ 疊著的那幾張雖然看不見，照樣接得到點擊（跟「點 7 沒反應」同一類問題）。
+     所以不逐張包連結，改成蓋一層連結在整個畫區上，換圖時換網址。 */
+  .hero .art img{pointer-events:none;}
+  .hero .artlink{position:absolute; inset:0; display:flex; align-items:flex-end;
+    justify-content:center; padding-bottom:34px; text-decoration:none;}
+  .hero .artlink span{opacity:0; transition:.25s; font-size:13.5px; color:#15130f;
+    background:rgba(232,201,139,.92); border-radius:999px; padding:5px 13px; letter-spacing:1px;}
+  .hero .artlink:hover span, .hero .artlink:focus span{opacity:1;}
+  .hero .cr a{color:#c7bda9;}
   .hero .tx{padding:28px 26px 34px; align-self:center;}
   .hero .nm{font-size:40px; letter-spacing:7px; color:#f6f1e6; line-height:1.3;}
   .hero .rt{margin-top:10px; font-size:16.5px; color:#cac1af; letter-spacing:1px; line-height:1.9;}
@@ -1014,6 +1023,8 @@ function renderHero(){
   el("hero").innerHTML = '<div class="hero">'
     + '<div class="art">'
     + ks.map((k,i)=>'<img src="畫像/'+k+'.jpg" alt=""'+(i ? '' : ' class="on"')+'>').join("")
+    + '<a class="artlink" id="artlink" target="_blank" rel="noopener">'
+    + '<span>到館藏網站看原件 ↗</span></a>'
     + '</div>'
     + '<div class="tx"><div class="nm"></div><div class="rt"></div><div class="ct"></div></div>'
     + (ks.length>1 ? '<div class="dots">'
@@ -1043,8 +1054,15 @@ function 輪播(ks){
     hero.querySelector(".ct").textContent =
       p && (p.站||[]).length ? (stations(DATA.祖師.indexOf(p)).length+" 站　"+p.站.length+" 件事") : "";
     // 出處一定要跟著當下這一幅換：每幅的館藏、年代、授權都不同
-    hero.querySelector(".cr").textContent =
-      m.館藏 + (m.年代 ? "　"+m.年代 : "") + "　" + m.授權;
+    const 文 = esc(m.館藏) + (m.年代 ? "　"+esc(m.年代) : "") + "　" + esc(m.授權);
+    hero.querySelector(".cr").innerHTML = m.詳目網址
+      ? 文 + '　<a href="' + esc(m.詳目網址) + '" target="_blank" rel="noopener">到館藏網站看原件 ↗</a>'
+      : 文;
+    const al = hero.querySelector("#artlink");
+    if(al){
+      if(m.詳目網址){ al.href = m.詳目網址; al.style.display = ""; }
+      else al.style.display = "none";   // 沒有網址就不要給一個點不到地方的連結
+    }
   };
   const 重新計時 = ()=>{
     clearInterval(輪播計時);
@@ -1057,7 +1075,8 @@ function 輪播(ks){
   換(起 >= 0 ? 起 : 0);
   點.forEach(b => b.addEventListener("click", e=>{ e.stopPropagation(); 換(+b.dataset.n); 重新計時(); }));
   // 點 banner 就切到那一位
-  hero.querySelector(".hero").addEventListener("click", ()=>{
+  hero.querySelector(".hero").addEventListener("click", e=>{
+    if(e.target.closest("a")) return;          // 點的是館藏連結，不要順便換人
     const i = DATA.祖師.findIndex(x=>x.介面名===PICS[ks[n]].祖師);
     if(i>=0 && i!==mi) gotoMaster(i);
   });
